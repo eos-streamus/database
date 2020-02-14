@@ -4,7 +4,7 @@
 -- DROP DATABASE streamus;
 
 CREATE DATABASE streamus
-    WITH 
+    WITH
     OWNER = postgres
     ENCODING = 'UTF8'
     LC_COLLATE = 'en_US.UTF-8'
@@ -29,12 +29,12 @@ create table StreamusUser(
   email varchar(255) not null unique,
   username varchar(50) not null,
   password varchar(191) not null,
-  foreign key(idPerson) references Person(id)
+  foreign key(idPerson) references Person(id) on delete cascade on update cascade
 );
 
 create table Admin(
 	idUser integer primary key,
-  foreign key(idUser) references StreamusUser(idPerson)
+  foreign key(idUser) references StreamusUser(idPerson) on delete cascade on update cascade
 );
 
 -- Collections
@@ -47,36 +47,36 @@ create table Collection(
 
 create table SongCollection(
 	idCollection integer primary key,
-  foreign key (idCollection) references Collection(id)
+  foreign key (idCollection) references Collection(id) on delete cascade on update cascade
 );
 
 create table Album(
 	idSongCollection integer primary key,
-  foreign key(idSongCollection) references SongCollection(idCollection)
+  foreign key(idSongCollection) references SongCollection(idCollection) on delete cascade on update cascade
 );
 
 create table SongPlaylist(
 	idSongCollection integer primary key,
   idUser integer not null,
-  foreign key(idSongCollection) references SongCollection(idCollection),
-  foreign key(idUser) references StreamusUser(idPerson)
+  foreign key(idSongCollection) references SongCollection(idCollection) on delete cascade on update cascade,
+  foreign key(idUser) references StreamusUser(idPerson) on delete cascade on update cascade
 );
 
 create table VideoCollection(
 	idCollection integer primary key,
-  foreign key (idCollection) references Collection(id)
+  foreign key (idCollection) references Collection(id) on delete cascade on update cascade
 );
 
 create table VideoPlaylist(
 	idVideoCollection integer primary key,
   idUser integer not null,
-  foreign key(idVideoCollection) references VideoCollection(idCollection),
-  foreign key(idUser) references StreamusUser(idPerson)
+  foreign key(idVideoCollection) references VideoCollection(idCollection) on delete cascade on update cascade,
+  foreign key(idUser) references StreamusUser(idPerson) on delete cascade on update cascade
 );
 
 create table Series(
 	idVideoCollection integer primary key,
-  foreign key(idVideoCollection) references VideoCollection(idCollection)
+  foreign key(idVideoCollection) references VideoCollection(idCollection) on delete cascade on update cascade
 );
 
 -- Resources
@@ -97,25 +97,25 @@ create table Resource (
 
 create table Song(
 	idResource integer primary key,
-  foreign key(idResource) references Resource(id)
+  foreign key(idResource) references Resource(id) on delete cascade on update cascade
 );
 
 create table Video(
 	idResource integer primary key,
-  foreign key(idResource) references Resource(id)
+  foreign key(idResource) references Resource(id) on delete cascade on update cascade
 );
 
 create table VideoSubtitle(
 	idVideo integer,
   idLanguage integer,
   primary key(idVideo, idLanguage),
-  foreign key(idVideo) references Video(idResource),
-  foreign key(idLanguage) references Language(id)
+  foreign key(idVideo) references Video(idResource) on delete cascade on update cascade,
+  foreign key(idLanguage) references Language(id) on delete cascade on update cascade
 );
 
 create table Film(
 	idVideo integer primary key,
-  foreign key (idVideo) references Video(idResource)
+  foreign key (idVideo) references Video(idResource) on delete cascade on update cascade
 );
 
 create table Episode(
@@ -123,8 +123,8 @@ create table Episode(
   idSeries integer,
   seasonNumber smallint,
   episodeNumber smallint,
-  foreign key(idVideo) references Video(idResource),
-  foreign key(idSeries) references Series(idVideoCollection),
+  foreign key(idVideo) references Video(idResource) on delete cascade on update cascade,
+  foreign key(idSeries) references Series(idVideoCollection) on delete set null,
   unique(idSeries, seasonNumber, episodeNumber)
 );
 
@@ -134,8 +134,8 @@ create table VideoPlaylistVideo(
   idVideo integer,
   number smallint,
   primary key(idVideoPlaylist, idVideo),
-  foreign key(idVideoPlaylist) references VideoPlaylist(idVideoCollection),
-  foreign key(idVideo) references Video(idResource),
+  foreign key(idVideoPlaylist) references VideoPlaylist(idVideoCollection) on delete cascade on update cascade,
+  foreign key(idVideo) references Video(idResource) on delete cascade on update cascade,
   unique(idVideoPlaylist, idVideo, number)
 );
 
@@ -144,8 +144,8 @@ create table SongCollectionSong(
   idSong integer,
   trackNumber smallint,
   primary key(idSongCollection, idSong),
-	foreign key(idSongCollection) references SongCollection(idCollection),
-  foreign key(idSong) references Song(idResource),
+	foreign key(idSongCollection) references SongCollection(idCollection) on delete cascade on update cascade,
+  foreign key(idSong) references Song(idResource) on delete cascade on update cascade,
   unique(idSongCollection, idSong, trackNumber)
 );
 
@@ -158,13 +158,13 @@ create table Artist(
 create table Musician(
 	idArtist integer primary key,
   idPerson integer,
-  foreign key(idArtist) references Artist(id),
-  foreign key(idPerson) references Person(id)
+  foreign key(idArtist) references Artist(id) on delete cascade on update cascade,
+  foreign key(idPerson) references Person(id) on delete set null
 );
 
 create table Band(
 	idArtist integer primary key,
-  foreign key(idArtist) references Artist(id)
+  foreign key(idArtist) references Artist(id) on delete cascade on update cascade
 );
 
 create table BandMusician(
@@ -173,8 +173,8 @@ create table BandMusician(
 	memberFrom date not null,
   memberTo date,
   primary key(idMusician, idBand, memberFrom),
-  foreign key(idMusician) references Musician(idArtist),
-  foreign key(idBand) references Band(idArtist)
+  foreign key(idMusician) references Musician(idArtist) on delete cascade on update cascade,
+  foreign key(idBand) references Band(idArtist) on delete cascade on update cascade
 );
 
 -- Song and Album Artists
@@ -182,16 +182,16 @@ create table SongArtist(
 	idSong integer,
   idArtist integer,
   primary key(idSong, idArtist),
-  foreign key(idSong) references Song(idResource),
-  foreign key(idArtist) references Artist(id)
+  foreign key(idSong) references Song(idResource) on delete cascade on update cascade,
+  foreign key(idArtist) references Artist(id) on delete cascade on update cascade
 );
 
 create table AlbumArtist(
 	idAlbum integer,
   idArtist integer,
 	primary key(idAlbum, idArtist),
-  foreign key(idAlbum) references Album(idSongCollection),
-  foreign key(idArtist) references Artist(id)
+  foreign key(idAlbum) references Album(idSongCollection) on delete cascade on update cascade,
+  foreign key(idArtist) references Artist(id) on delete cascade on update cascade
 );
 
 -- Activities
@@ -202,23 +202,23 @@ create table Activity(
 create table ResourceActivity(
 	idActivity bigint primary key,
   idResource integer not null,
-	foreign key(idActivity) references Activity(id),
-  foreign key(idResource) references Resource(id)
+	foreign key(idActivity) references Activity(id) on delete cascade on update cascade,
+  foreign key(idResource) references Resource(id) on delete cascade on update cascade
 );
 
 create table CollectionActivity(
 	idActivity bigint primary key,
   idCollection integer not null,
-  foreign key(idActivity) references Activity(id),
-  foreign key(idCollection) references Collection(id)
+  foreign key(idActivity) references Activity(id) on delete cascade on update cascade,
+  foreign key(idCollection) references Collection(id) on delete cascade on update cascade
 );
 
 create table CollectionActivityResourceActivity(
 	idCollectionActivity bigint,
   idResourceActivity bigint,
 	primary key(idCollectionActivity, idResourceActivity),
-  foreign key(idResourceActivity) references ResourceActivity(idActivity),
-  foreign key(idCollectionActivity) references CollectionActivity(idActivity)
+  foreign key(idResourceActivity) references ResourceActivity(idActivity) on delete cascade on update cascade,
+  foreign key(idCollectionActivity) references CollectionActivity(idActivity) on delete cascade on update cascade
 );
 
 create table UserActivity(
@@ -226,6 +226,6 @@ create table UserActivity(
   idActivity bigint,
 	manages boolean not null default true,
   primary key(idUser, idActivity),
-  foreign key(idUser) references StreamusUser(idPerson),
-  foreign key(idActivity) references Activity(id)
+  foreign key(idUser) references StreamusUser(idPerson) on delete cascade on update cascade,
+  foreign key(idActivity) references Activity(id) on delete cascade on update cascade
 );
