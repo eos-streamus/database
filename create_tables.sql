@@ -233,9 +233,9 @@ create table UserActivity(
 create table ActivityMessage(
   id serial primary key,
   idActivity bigint,
-  isUser integer,
+  idUser integer,
   content varchar(255) not null,
   postedAt timestamp not null default now(),
   foreign key (idActivity) references Activity(id) on delete cascade on update cascade,
-  foreign key (idUser) references User(idPerson) on delete cascade on update cascade
+  foreign key (idUser) references StreamusUser(idPerson) on delete cascade on update cascade
 );
