@@ -11726,6 +11726,48 @@
 							"width": 121,
 							"height": 25,
 							"text": "{complete, disjoint}"
+						},
+						{
+							"_type": "UMLNoteView",
+							"_id": "AAAAAAFwSJ4L97gBQsE=",
+							"_parent": {
+								"$ref": "AAAAAAFwQ/RCagvoehE="
+							},
+							"font": "Arial;13;0",
+							"left": 432,
+							"top": 1096,
+							"width": 228.0380859375,
+							"height": 57,
+							"text": "ResrouceActivties associated to a CollectionActivity must concern a resource contained in that collection"
+						},
+						{
+							"_type": "UMLNoteLinkView",
+							"_id": "AAAAAAFwSJ9t+btruek=",
+							"_parent": {
+								"$ref": "AAAAAAFwQ/RCagvoehE="
+							},
+							"font": "Arial;13;0",
+							"head": {
+								"$ref": "AAAAAAFwRBxDuFseSvQ="
+							},
+							"tail": {
+								"$ref": "AAAAAAFwSJ4L97gBQsE="
+							},
+							"lineStyle": 1,
+							"points": "561:1095;599:1026"
+						},
+						{
+							"_type": "UMLNoteView",
+							"_id": "AAAAAAFwSJ/ogb46OQ0=",
+							"_parent": {
+								"$ref": "AAAAAAFwQ/RCagvoehE="
+							},
+							"font": "Arial;13;0",
+							"left": 840,
+							"top": 432,
+							"width": 153,
+							"height": 90,
+							"text": "from < to, from > dateOfBirth if known.  If a musician is member of a band more than once, previous.to < new.from"
 						}
 					]
 				},
