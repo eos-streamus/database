@@ -2,6 +2,25 @@
 
 -- ActivityMessage
 --   User is part of activity
+create or replace function checkCollectionActivityMembershipOnNewMessage()
+  returns trigger as 
+  $$
+  begin
+    if new.idUser not in (
+      select UserActivity.idUser from UserActivity where UserActivity.idActivity = new.idActivity
+    ) then
+      raise exception '% is not in activity %', new.idUser, new.idActivity;
+    end if;
+    return new;
+  end;
+  $$
+  language 'plpgsql'
+
+
+create trigger checkCollectionActivityMembershipOnNewMessageTrigger
+  before insert on ActivityMessage
+  for each row execute procedure checkCollectionActivityMembershipOnNewMessage();
+
 --   timestamp > oldest started_at
 --   Cannot point to a ResourceActivity which is linked to a CollectionActivity. Change to CollectionActivity id
 
