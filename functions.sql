@@ -165,3 +165,19 @@ create or replace function createSeries(_name varchar(200))
   end;
   $$
   language 'plpgsql';
+
+create or replace function createCollectionActivity(_idCollection integer)
+  returns bigint as
+  $$
+  declare
+    _idCollectionActivity bigint;
+  begin
+    with
+    created_activity as (
+      insert into Activity values(default) returning id
+    )
+    insert into CollectionActivity(idActivity, idCollection) values ((select id from created_activity), _idCollection) returning idActivity into _idCollectionActivity;
+    return _idCollectionActivity;
+  end
+  $$
+  language 'plpgsql';
