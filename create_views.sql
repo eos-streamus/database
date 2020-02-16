@@ -119,13 +119,60 @@ order by
 	vepisode.seasonnumber,
 	vepisode.episodenumber;
   
-drop view if exists vcollectionresource;
+drop view if exists vcollectionresource cascade;
 create view vcollectionresource as
-select
-	collection.id idcollection,
-	resource.id as idresource
-from collection
-	left join songcollectionsong on songcollectionsong.idsongcollection = collection.id
-	left join videoplaylistvideo ON collection.id = videoplaylistvideo.idvideoplaylist
-	left join episode on collection.id = episode.idseries
-	inner join resource on coalesce(songcollectionsong.idsong, videoplaylistvideo.idvideo, episode.idvideo) = resource.id;
+  with
+  number_of_episodes_by_series_season as (
+    select distinct
+      episode.idseries,
+      episode.seasonnumber,
+      count(distinct episode.idvideo) as nbepisodes
+    from episode
+    group by
+      episode.idseries,
+      episode.seasonnumber
+    order by
+      episode.idseries,
+      episode.seasonnumber
+  ),
+
+  number_of_previous_episodes as (
+    select
+      episode.*,
+      coalesce(sum(number_of_episodes_by_series_season.nbepisodes), 0) + episode.episodenumber - 1 previous_episodes
+    from episode
+      left join number_of_episodes_by_series_season on episode.idseries = number_of_episodes_by_series_season.idseries and
+                                episode.seasonnumber > number_of_episodes_by_series_season.seasonnumber
+    group by
+      episode.episodenumber,
+      episode.idseries,
+      episode.idvideo,
+      episode.seasonnumber,
+      episode.episodenumber
+  )
+  
+  select distinct
+    collection.id idcollection,
+    coalesce(videoplaylistvideo.number, songcollectionsong.tracknumber, number_of_previous_episodes.previous_episodes) + 1 as num,
+    resource.id as idresource
+  from collection
+    left join songcollectionsong on songcollectionsong.idsongcollection = collection.id
+    left join videoplaylistvideo ON collection.id = videoplaylistvideo.idvideoplaylist
+    left join episode on collection.id = episode.idseries
+    left join number_of_previous_episodes on episode.idvideo = number_of_previous_episodes.idvideo
+    inner join resource on coalesce(songcollectionsong.idsong, videoplaylistvideo.idvideo, episode.idvideo) = resource.id;
+
+
+drop view if exists vfullcollectionactivity;
+create view vfullcollectionactivity as
+  select
+    collectionactivity.idactivity idcollectionactivity,
+    vcollectionresource.*,
+    resourceactivity.idactivity idresourceactivity,
+    resourceactivity.startedat,
+    resourceactivity.pausedat
+  from collectionactivity
+    inner join vcollectionresource on collectionactivity.idcollection = vcollectionresource.idcollection
+    left join resourceactivity on collectionactivity.idactivity = resourceactivity.idcollectionactivity and
+                                  vcollectionresource.idresource = resourceactivity.idresource;
+
