@@ -48,10 +48,44 @@ create trigger checkMessageTimestampValidityTrigger
   for each row execute procedure checkMessageTimestampValidity();
 
 --   Cannot point to a ResourceActivity which is linked to a CollectionActivity. Change to CollectionActivity id
-
+create or replace function checkActivityMessageTarget()
+  returns trigger as
+  $$
+  begin
+    if (select idCollection from ResourceActivity where ActivityMessage.idActivity = ResourceActivity.idActivity) is not null then
+      raise exception 'ActivityMessage cannot have as target a ResourceActivity which is part of a CollectionActivity';
+    end if;
+    return new;
+  end;
+  $$
+  language 'plpgsql';
+create trigger checkActivityMessageTargetTrigger
+  before insert on ActivityMessage
+  for each row execute procedure checkActivityMessageTarget();
 
 -- ResourceActivity
 --   If part of CollectionActivity, must point to a Resource which is part of CollectionActivity's collection
+create or replace function checkCollectionResourceActivityTarget()
+  returns trigger as
+  $$
+  begin
+    if new.idCollectionActivity is not null and new.idResource not in (
+      select distinct
+        vcollectionresource.idResource
+      from CollectionActivity
+        inner join vcollectionresource on collectionActivity.idcollection = vcollectionresource.idcollection 
+      where collectionActivity.idActivity = new.idCollectionActivity
+    ) then
+      raise exception 'ResourceActivity resource is not in associated collection activity collection';
+    end if;
+    return new;
+  end;
+  $$
+  language 'plpgsql';
+create trigger checkCollectionResourceActivityTargetTrigger
+  before insert on ResourceActivity
+  for each row execute procedure checkCollectionResourceActivityTarget();
+
 --   If part of CollectionActivity, started_at > previous.paused_timestamp or started_at > previous.started_at + resource.duration
 --   If part of CollectionActivity, users must be a subset of CollectionActivity's users
 --   ResourceActivity.paused_at < Resource.duration
