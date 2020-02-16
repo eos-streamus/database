@@ -118,3 +118,14 @@ order by
 	collection.id,
 	vepisode.seasonnumber,
 	vepisode.episodenumber;
+  
+drop view if exists vcollectionresource;
+create view vcollectionresource as
+select
+	collection.id idcollection,
+	resource.id as idresource
+from collection
+	left join songcollectionsong on songcollectionsong.idsongcollection = collection.id
+	left join videoplaylistvideo ON collection.id = videoplaylistvideo.idvideoplaylist
+	left join episode on collection.id = episode.idseries
+	inner join resource on coalesce(songcollectionsong.idsong, videoplaylistvideo.idvideo, episode.idvideo) = resource.id;
