@@ -42,7 +42,7 @@ create table Admin(
 create table Collection(
 	id serial primary key,
   name varchar(200) not null,
-  created_at timestamp not null default now()
+  createdAt timestamp not null default now()
 );
 
 create table SongCollection(
@@ -52,6 +52,7 @@ create table SongCollection(
 
 create table Album(
 	idSongCollection integer primary key,
+  releaseDate date,
   foreign key(idSongCollection) references SongCollection(idCollection) on delete cascade on update cascade
 );
 
@@ -91,7 +92,7 @@ create table Resource (
 	id serial primary key,
   path varchar(1041) unique not null,
   name varchar(200) not null,
-  created_at timestamp not null default now(),
+  createdAt timestamp not null default now(),
   duration integer
 );
 
@@ -202,6 +203,9 @@ create table Activity(
 create table ResourceActivity(
 	idActivity bigint primary key,
   idResource integer not null,
+  idCollectionActivity bigint,
+  startedAt timestamp not null default now(),
+  pausedAt integer,
 	foreign key(idActivity) references Activity(id) on delete cascade on update cascade,
   foreign key(idResource) references Resource(id) on delete cascade on update cascade
 );
