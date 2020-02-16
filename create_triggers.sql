@@ -1,5 +1,26 @@
 -- Needed triggers
 
+-- Resource.duration > 0
+create or replace function checkPositiveResourceDuration()
+  returns trigger as 
+  $$
+  begin
+    if new.duration <= 0 then
+      raise exception 'Resource duration % is invalid. Must be >= 0', new.duration;
+    end if;
+    return new;
+  end;
+  $$
+  language 'plpgsql';
+create trigger checkPositiveResourceDurationInsertTrigger
+  before insert on resource
+  for each row
+  execute procedure checkPositiveResourceDuration();
+create trigger checkPositiveResourceDurationupdateTrigger
+  before update on resource
+  for each row
+  execute procedure checkPositiveResourceDuration();
+
 -- ActivityMessage
 --   User is part of activity
 create or replace function checkCollectionActivityMembershipOnNewMessage()
@@ -88,7 +109,32 @@ create trigger checkCollectionResourceActivityTargetTrigger
 
 --   If part of CollectionActivity, started_at > previous.paused_timestamp or started_at > previous.started_at + resource.duration
 --   If part of CollectionActivity, users must be a subset of CollectionActivity's users
---   ResourceActivity.paused_at < Resource.duration
+
+
+
+--   ResourceActivity.paused_at < Resource.duration && >= 0
+create or replace function checkPausedAtValidity()
+  returns trigger as
+  $$
+  begin
+    if new.pausedAt > (select Resource.duration from Resource where Resource.id = new.idResource) or new.pausedAt < 0
+      then raise exception 'ResourceActivity % for Resource % cannot be paused at % (duration %)', new.idActivity, new.idResource, new.pausedAt, (select duration from resource where id = new.idresource);
+    end if;
+    return new;
+  end;
+  $$
+  language 'plpgsql';
+
+drop trigger checkPausedAtValidityOnUpdateTrigger on resourceactivity;
+create trigger checkPausedAtValidityOnUpdateTrigger
+  before update on resourceactivity
+  for each row execute procedure checkPausedAtValidity();
+
+drop trigger checkPausedAtValidityOnInsertTrigger on resourceactivity;
+create trigger checkPausedAtValidityOnInsertTrigger
+  before insert on resourceactivity
+  for each row execute procedure checkPausedAtValidity();
+
 
 -- Band-Musician
 --   from < to
