@@ -1,32 +1,120 @@
-drop view if exists vsong;
+-- People
+drop view if exists vuser cascade;
+create view vuser as
+select
+  person.id,
+  person.firstname,
+  person.lastname,
+  person.dateOfBirth,
+  streamususer.email,
+  streamususer.username
+from streamususer
+  inner join person on streamususer.idperson = person.id;
+
+drop view if exists vsong cascade;
 create view vsong as
 select
 	resource.*
 from song
 	inner join resource on song.idresource = resource.id;
   
-drop view if exists vvideo;
+drop view if exists vvideo cascade;
 create view vvideo as
 select
 	resource.*
 from video
 	inner join resource on video.idresource = resource.id;
 
-drop view if exists vfilm;
+drop view if exists vfilm cascade;
 create view vfilm as
 select
 	vvideo.*
 from film
 	inner join vvideo on film.idvideo = vvideo.id;
 
-drop view if exists vepisode
+drop view if exists vepisode cascade;
 create view vepisode as
 select
 	vvideo.*,
 	episode.episodenumber,
-	episode.idseries,
-	collection.name
+  episode.seasonnumber,
+	episode.idseries
 from episode
 	inner join vvideo on episode.idvideo = vvideo.id
   inner join collection on episode.idseries = collection.id;
 
+drop view if exists vvideoplaylist cascade;
+create view vvideoplaylist as
+select
+	collection.id,
+	collection.name,
+	collection.createdAt,
+	videoplaylist.iduser,
+	vvideo.id idvideo,
+	vvideo.name videoname,
+	vvideo.createdat videoCreatedAt,
+	vvideo.path,
+	vvideo.duration
+from videoplaylist
+	inner join videocollection on videoplaylist.idvideocollection = videocollection.idcollection
+	inner join collection on videocollection.idcollection = collection.id
+	left join videoplaylistvideo ON videoplaylist.idvideocollection = videoplaylistvideo.idvideoplaylist
+	left join vvideo on videoplaylistvideo.idvideo = vvideo.id;
+
+drop view if exists vsongcollection cascade;
+create view vsongcollection as
+select
+	collection.id,
+	collection.name,
+	collection.createdat,
+	songcollectionsong.tracknumber,
+	vsong.id idsong,
+	vsong.name songname,
+	vsong.createdat songcreatedat,
+	vsong.duration,
+	vsong.path
+from songcollection
+	inner join collection on songcollection.idcollection = collection.id
+	left join songcollectionsong on songcollection.idcollection = songcollectionsong.idsongcollection
+	left join vsong on songcollectionsong.idsong = vsong.id
+order by
+	collection.id,
+	songcollectionsong.tracknumber;
+
+drop view if exists valbum cascade;
+create view valbum as
+select
+	vsongcollection.*,
+	album.releasedate
+from album
+	inner join vsongcollection on album.idsongcollection = vsongcollection.id;
+
+drop view if exists vsongplaylist cascade;
+create view vsongplaylist as
+select
+	vsongcollection.*,
+	songplaylist.iduser
+from songplaylist
+	inner join vsongcollection on songplaylist.idsongcollection = vsongcollection.id;
+
+drop view if exists vseries cascade;
+create view vseries as
+select
+	collection.id,
+	collection.name,
+	collection.createdAt,
+	vepisode.id idepisode,
+	vepisode.seasonnumber,
+	vepisode.episodenumber,
+	vepisode.name episodename,
+	vepisode.createdat episodecreatedat,
+	vepisode.path,
+	vepisode.duration
+from series
+	inner join videocollection on series.idvideocollection = videocollection.idcollection
+	inner join collection on videocollection.idcollection = collection.id
+	left join vepisode on series.idvideocollection = vepisode.idseries
+order by
+	collection.id,
+	vepisode.seasonnumber,
+	vepisode.episodenumber;
