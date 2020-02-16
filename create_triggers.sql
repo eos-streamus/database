@@ -9,12 +9,12 @@ create or replace function checkCollectionActivityMembershipOnNewMessage()
     if new.idUser not in (
       select UserActivity.idUser from UserActivity where UserActivity.idActivity = new.idActivity
     ) then
-      raise exception '% is not in activity %', new.idUser, new.idActivity;
+      raise exception 'User % is not in activity %', new.idUser, new.idActivity;
     end if;
     return new;
   end;
   $$
-  language 'plpgsql'
+  language 'plpgsql';
 
 
 create trigger checkCollectionActivityMembershipOnNewMessageTrigger
@@ -22,6 +22,31 @@ create trigger checkCollectionActivityMembershipOnNewMessageTrigger
   for each row execute procedure checkCollectionActivityMembershipOnNewMessage();
 
 --   timestamp > oldest started_at
+create or replace function checkMessageTimestampValidity()
+  returns trigger as 
+  $$
+  declare
+    oldest_timestamp timestamp;
+  begin
+    select into oldest_timestamp
+    min(ResourceActivity.startedAt)
+    from ResourceActivity
+        where ResourceActivity.idActivity = new.idActivity or ResourceActivity.idCollectionActivity = new.idActivity;
+    if
+      new.postedAt > now() then
+        raise Exception 'Timestamp % is in the future', new.postedAt;
+    elseif
+      new.postedAt < oldest_timestamp then
+        raise exception 'Timestamp % is before lowest acceptable value %', new.postedAt, oldest_timestamp;
+    end if;
+    return new;
+  end
+  $$
+  language 'plpgsql';
+create trigger checkMessageTimestampValidityTrigger
+  before insert on ActivityMessage
+  for each row execute procedure checkMessageTimestampValidity();
+
 --   Cannot point to a ResourceActivity which is linked to a CollectionActivity. Change to CollectionActivity id
 
 
