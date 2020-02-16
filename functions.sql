@@ -160,7 +160,7 @@ create or replace function createSeries(_name varchar(200))
     created_video_collection as (
       insert into videocollection(idcollection) values((select id from created_collection)) returning idCollection
     )
-	insert into series(idvideocollection) values ((select idColleciton from created_video_collection)) returning idVideoCollection into _idSeries;
+	insert into series(idvideocollection) values ((select idCollection from created_video_collection)) returning idVideoCollection into _idSeries;
 	return _idSeries;
   end;
   $$
