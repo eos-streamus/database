@@ -125,12 +125,12 @@ create or replace function checkPausedAtValidity()
   $$
   language 'plpgsql';
 
-drop trigger checkPausedAtValidityOnUpdateTrigger on resourceactivity;
+drop trigger if exists checkPausedAtValidityOnUpdateTrigger on resourceactivity;
 create trigger checkPausedAtValidityOnUpdateTrigger
   before update on resourceactivity
   for each row execute procedure checkPausedAtValidity();
 
-drop trigger checkPausedAtValidityOnInsertTrigger on resourceactivity;
+drop trigger if exists checkPausedAtValidityOnInsertTrigger on resourceactivity;
 create trigger checkPausedAtValidityOnInsertTrigger
   before insert on resourceactivity
   for each row execute procedure checkPausedAtValidity();
@@ -138,13 +138,15 @@ create trigger checkPausedAtValidityOnInsertTrigger
 
 -- Band-Musician
 --   from < to
+drop trigger if exists checkBandMusicianFromToIntegrityInsertTrigger on bandmusician;
+drop trigger if exists checkBandMusicianFromToIntegrityUpdateTrigger on bandmusician;
 create or replace function checkBandMusicianFromToIntegrity()
   returns trigger as 
   $$
   begin
-    if new.from >= new.to then
+    if new.memberTo is not null and new.memberfrom >= new.memberto then
       raise exception 'From must be <= to';
-    elseif new.to > now() then
+    elseif new.memberto is not null and new.memberto > now() then
       raise exception 'To % cannot be in the future', new.to;
     end if;
     return new;
@@ -158,6 +160,34 @@ create trigger checkBandMusicianFromToIntegrityUpdateTrigger
   before update on bandmusician
   for each row execute procedure checkBandMusicianFromToIntegrity();
 --   from > Musician.Artist.dateOfBirth if exists
+
+drop trigger if exists checkMusicianDateOfBirthAgainstBandMembershipInsertTrigger on bandmusician;
+drop trigger if exists checkMusicianDateOfBirthAgainstBandMembershipUpdateTrigger on bandmusician;
+create or replace function checkMusicianDateOfBirthAgainstBandMembership()
+  returns trigger as
+  $$
+  declare
+    _idPerson integer;
+    _dateOfBirth date;
+  begin
+    select into _idPerson
+    idperson from musician where idArtist = new.idMusician;
+    if 
+      _idPerson is not null and (
+        select dateOfBirth from person where id = _idPerson
+      ) > new.memberFrom then
+        raise exception 'Artist is born after band membership start';
+    end if;
+    return new;
+  end;
+  $$
+  language 'plpgsql';
+create trigger checkMusicianDateOfBirthAgainstBandMembershipInsertTrigger
+  before insert on bandmusician
+  for each row execute procedure checkMusicianDateOfBirthAgainstBandMembership();
+create trigger checkMusicianDateOfBirthAgainstBandMembershipUpdateTrigger
+  before update on bandmusician
+  for each row execute procedure checkMusicianDateOfBirthAgainstBandMembership();
 --   If a musician is member more than once, newer.from > older.to
 
 -- Resource
