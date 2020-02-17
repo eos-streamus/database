@@ -188,8 +188,46 @@ create trigger checkMusicianDateOfBirthAgainstBandMembershipInsertTrigger
 create trigger checkMusicianDateOfBirthAgainstBandMembershipUpdateTrigger
   before update on bandmusician
   for each row execute procedure checkMusicianDateOfBirthAgainstBandMembership();
---   If a musician is member more than once, newer.from > older.to
 
+--   If a musician is member more than once, newer.from > older.to or older.to is null and newer.to < older.from
+drop trigger if exists checkMultipleMusicianBandMembershipDateIntegrityInsertTrigger on bandmusician;
+drop trigger if exists checkMultipleMusicianBandMembershipDateIntegrityUpdateTrigger on bandmusician;
+create or replace function checkMultipleMusicianBandMembershipDateIntegrity()
+  returns trigger as
+  $$
+  begin
+    if
+      exists (
+        select 1 
+        from bandmusician 
+        where
+          bandmusician.idband = new.idband and 
+          bandmusician.idmusician = new.idmusician and 
+          bandmusician.memberfrom != new.memberfrom
+      ) and exists (
+        select 1
+        from bandmusician
+        where
+          bandmusician.idband = new.idband and 
+          bandmusician.idmusician = new.idmusician and 
+          bandmusician.memberfrom != new.memberfrom and (
+            bandmusician.memberto is null or
+            bandmusician.memberto >= new.memberfrom
+          )
+      ) then
+        raise exception 'Musician cannot overlapping memberships to band';
+    end if;
+    return new;
+  end;
+  $$
+  language 'plpgsql';
+create trigger checkMultipleMusicianBandMembershipDateIntegrityInsertTrigger
+  before Insert on bandmusician
+  for each row execute procedure checkMultipleMusicianBandMembershipDateIntegrity();
+
+create trigger checkMultipleMusicianBandMembershipDateIntegrityUpdateTrigger
+  before Update on bandmusician
+  for each row execute procedure checkMultipleMusicianBandMembershipDateIntegrity();
 -- Resource
 --   Resource.created_at <= now()
 --   Resource.duration > 0
