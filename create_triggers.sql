@@ -138,6 +138,25 @@ create trigger checkPausedAtValidityOnInsertTrigger
 
 -- Band-Musician
 --   from < to
+create or replace function checkBandMusicianFromToIntegrity()
+  returns trigger as 
+  $$
+  begin
+    if new.from >= new.to then
+      raise exception 'From must be <= to';
+    elseif new.to > now() then
+      raise exception 'To % cannot be in the future', new.to;
+    end if;
+    return new;
+  end;
+  $$
+  language 'plpgsql';
+create trigger checkBandMusicianFromToIntegrityInsertTrigger
+  before insert on bandmusician
+  for each row execute procedure checkBandMusicianFromToIntegrity();
+create trigger checkBandMusicianFromToIntegrityUpdateTrigger
+  before update on bandmusician
+  for each row execute procedure checkBandMusicianFromToIntegrity();
 --   from > Musician.Artist.dateOfBirth if exists
 --   If a musician is member more than once, newer.from > older.to
 
