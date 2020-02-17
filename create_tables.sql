@@ -42,7 +42,8 @@ create table Admin(
 create table Collection(
 	id serial primary key,
   name varchar(200) not null,
-  createdAt timestamp not null default now()
+  createdAt timestamp not null default now(),
+  updatedAt timestamp not null default now()
 );
 
 create table SongCollection(

@@ -248,12 +248,65 @@ create trigger checkResourceCreatedAtValidityInsertTrigger
 create trigger checkResourceCreatedAtValidityupdateTrigger
   before update on resource
   for each row execute procedure checkResourceCreatedAtValidity();
+
 --   Resource.duration > 0
+create or replace function checkResourceDuration()
+  returns trigger as 
+  $$
+  begin
+    if new.duration <= 0 then
+      raise exception 'Resource must have positive duration';
+	  end if;
+    return new;
+  end;
+  $$
+  language 'plpgsql';
+create trigger checkResourceDurationInsertTrigger
+  before insert on resource
+  for each row execute procedure checkResourceDuration();
+create trigger checkResourceDurationupdateTrigger
+  before update on resource
+  for each row execute procedure checkResourceDuration();
+
 
 -- Collection
 --   Collection.created_at <= now()
---   Collection.updated_at > Collection.created_at && Collection.updated_at <= now()
+create or replace function checkCollectionCreatedAtValidity()
+  returns trigger as 
+  $$
+  begin
+    if new.createdAt > now() then
+      raise exception 'Collection cannot be created in the future';
+	  end if;
+    return new;
+  end;
+  $$
+  language 'plpgsql';
+create trigger checkCollectionCreatedAtValidityInsertTrigger
+  before insert on Collection
+  for each row execute procedure checkCollectionCreatedAtValidity();
+create trigger checkCollectionCreatedAtValidityupdateTrigger
+  before update on Collection
+  for each row execute procedure checkCollectionCreatedAtValidity();
 
+--   Collection.updated_at >= Collection.created_at && Collection.updated_at <= now()
+create or replace function checkCollectionUpdatedAtValidity()
+  returns trigger as 
+  $$
+  begin
+    if new.updatedAt < new.createdAt or new.updatedAt > now() then
+      raise exception 'Invalid updatedAt timestamp. Must be between createdAt and now';
+    end if;
+    return new;
+  end;
+  $$
+  language 'plpgsql';
+create trigger checkCollectionUpdatedAtValidityInsertTrigger
+  before insert on collection
+  for each row execute procedure checkCollectionUpdatedAtValidity();
+create trigger checkCollectionUpdatedAtValidityUpdateTrigger
+  before update on collection
+  for each row execute procedure checkCollectionUpdatedAtValidity();
 -- Album
 --   Album.release_date <= now()
 --   Album.release_date <= Collection.created_at
