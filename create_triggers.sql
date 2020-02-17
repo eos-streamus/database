@@ -228,8 +228,26 @@ create trigger checkMultipleMusicianBandMembershipDateIntegrityInsertTrigger
 create trigger checkMultipleMusicianBandMembershipDateIntegrityUpdateTrigger
   before Update on bandmusician
   for each row execute procedure checkMultipleMusicianBandMembershipDateIntegrity();
+
 -- Resource
 --   Resource.created_at <= now()
+create or replace function checkResourceCreatedAtValidity()
+  returns trigger as 
+  $$
+  begin
+    if new.createdAt > now() then
+      raise exception 'Resource cannot be created in the future';
+	  end if;
+    return new;
+  end;
+  $$
+  language 'plpgsql';
+create trigger checkResourceCreatedAtValidityInsertTrigger
+  before insert on resource
+  for each row execute procedure checkResourceCreatedAtValidity();
+create trigger checkResourceCreatedAtValidityupdateTrigger
+  before update on resource
+  for each row execute procedure checkResourceCreatedAtValidity();
 --   Resource.duration > 0
 
 -- Collection
