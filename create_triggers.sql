@@ -307,6 +307,61 @@ create trigger checkCollectionUpdatedAtValidityInsertTrigger
 create trigger checkCollectionUpdatedAtValidityUpdateTrigger
   before update on collection
   for each row execute procedure checkCollectionUpdatedAtValidity();
+
+-- Update songcollection updatedAt
+drop trigger if exists updateSongCollectionUpdatedAtInsertTrigger on SongCollectionSong;
+drop trigger if exists updateSongCollectionUpdatedAtUpdateTrigger on SongCollectionSong;
+create or replace function updateSongCollectionTimestamp()
+  returns trigger as 
+  $$
+  begin
+    update collection set updatedAt = now() where collection.id = new.idcollection;
+    return new;
+  end;
+  $$
+  language 'plpgsql';
+create trigger updateSongCollectionUpdatedAtInsertTrigger
+  before insert on SongCollectionSong
+  for each row execute procedure updateSongCollectionTimestamp();
+create trigger updateSongCollectionUpdatedAtUpdateTrigger
+  before Update on SongCollectionSong
+  for each row execute procedure updateSongCollectionTimestamp();
+
+drop trigger if exists updateVideoPlaylistUpdatedAtInsertTrigger on VideoPlaylistVideo;
+drop trigger if exists updateVideoPlaylistUpdatedAtUpdateTrigger on VideoPlaylistVideo;
+create or replace function updateVideoPlaylistTimestamp()
+  returns trigger as 
+  $$
+  begin
+    update collection set updatedAt = now() where collection.id = new.idVideoPlaylist;
+    return new;
+  end;
+  $$
+  language 'plpgsql';
+create trigger updateVideoPlaylistUpdatedAtInsertTrigger
+  before insert on VideoPlaylistVideo
+  for each row execute procedure updateVideoPlaylistTimestamp();
+create trigger updateVideoPlaylistUpdatedAtUpdateTrigger
+  before Update on VideoPlaylistVideo
+  for each row execute procedure updateVideoPlaylistTimestamp();
+
+drop trigger if exists updateSeriesUpdatedAtInsertTrigger on Episode;
+drop trigger if exists updateSeriesUpdatedAtUpdateTrigger on Episode;
+create or replace function updateSeriesTimestamp()
+  returns trigger as
+  $$
+  begin
+    update collection set updatedAt = now() where collection.id = new.idseries;
+    return new;
+  end;
+  $$
+  language 'plpgsql';
+create trigger updateSeriesUpdatedAtInsertTrigger
+  before insert on Episode
+  for each row execute procedure updateSeriesTimestamp();
+create trigger updateSeriesUpdatedAtUpdateTrigger
+  before Update on Episode
+  for each row execute procedure updateSeriesTimestamp();
 -- Album
 --   Album.release_date <= now()
 --   Album.release_date <= Collection.created_at
