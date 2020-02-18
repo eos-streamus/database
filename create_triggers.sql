@@ -362,8 +362,26 @@ create trigger updateSeriesUpdatedAtInsertTrigger
 create trigger updateSeriesUpdatedAtUpdateTrigger
   before Update on Episode
   for each row execute procedure updateSeriesTimestamp();
+
 -- Album
 --   Album.release_date <= now()
+create or replace function checkAlbumDateValidity()
+  returns trigger as 
+  $$
+  begin
+    if new.releaseDate > now() or new.releaseDate > (select createdAt from collection where id = new.idSongCollection) then
+      raise exception 'Invalid album release date. Must be in the past and before collection creation date';
+    end if;
+    return new;
+  end;
+  $$
+  language 'plpgsql';
+create trigger checkAlbumDateValidityInsertTrigger
+  before insert on Album
+  for each row execute procedure checkAlbumDateValidity();
+create trigger checkAlbumDateValidityUpdateTrigger
+  before update on Album
+  for each row execute procedure checkAlbumDateValidity();
 --   Album.release_date <= Collection.created_at
 
 -- SongCollectionSong
