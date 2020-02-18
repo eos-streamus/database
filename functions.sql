@@ -106,7 +106,7 @@ create or replace function createMusician(_name varchar(191), _idPerson integer 
   $$
   language 'plpgsql';
 
-create or replace function createAlbum(_name varchar(200), _releaseDate date, variadic _artistIds integer[])
+create or replace function createAlbum(_name varchar(200), _releaseDate date, variadic _artistIds integer[] default null)
   returns integer as 
   $$
   declare
