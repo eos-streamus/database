@@ -181,3 +181,22 @@ create or replace function createCollectionActivity(_idCollection integer)
   end
   $$
   language 'plpgsql';
+
+create or replace function createVideoPlaylist(_name varchar(200), _idUser integer)
+  returns integer as 
+  $$
+  declare
+    _idVideoPlaylist integer;
+  begin
+    with
+    created_collection as (
+		  insert into collection(name) values (_name) returning id
+    ),
+    created_video_collection as (
+      insert into videocollection(idcollection) values((select id from created_collection)) returning idCollection
+    )
+    insert into videoplaylist(idVideoCollection, idUser) values ((select idCollection from created_video_collection), _idUser) returning idVideoCollection into _idVideoPlaylist;
+    return _idVideoPlaylist;
+  end;
+  $$
+  language 'plpgsql';
