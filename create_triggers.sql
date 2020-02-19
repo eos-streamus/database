@@ -315,7 +315,7 @@ create or replace function updateSongCollectionTimestamp()
   returns trigger as 
   $$
   begin
-    update collection set updatedAt = now() where collection.id = new.idcollection;
+    update collection set updatedAt = now() where collection.id = new.idsongcollection;
     return new;
   end;
   $$
@@ -365,6 +365,7 @@ create trigger updateSeriesUpdatedAtUpdateTrigger
 
 -- Album
 --   Album.release_date <= now()
+--   Album.release_date <= Collection.created_at
 create or replace function checkAlbumDateValidity()
   returns trigger as 
   $$
@@ -382,11 +383,52 @@ create trigger checkAlbumDateValidityInsertTrigger
 create trigger checkAlbumDateValidityUpdateTrigger
   before update on Album
   for each row execute procedure checkAlbumDateValidity();
---   Album.release_date <= Collection.created_at
 
 -- SongCollectionSong
 --   track_number > 0
+create or replace function checkPositiveTrackNumber()
+  returns trigger as 
+  $$
+  begin
+    if new.trackNumber < 1 then
+      raise exception 'Track number must be positive';
+    end if;
+    return new;
+  end;
+  $$
+  language 'plpgsql';
+create trigger checkPositiveTrackNumber
+  before insert or update on SongCollectionSong
+  for each row execute procedure checkPositiveTrackNumber();
+
 --   track_numbers are continuous integers.
+create or replace function checkContinuousTrackNumbers()
+  returns trigger as 
+  $$
+  declare
+    _max smallint;
+    _min smallint;
+    _count smallint;
+  begin
+  	if not exists(select 1 from songcollectionsong where songcollectionsong.idsongcollection = new.idsongcollection) and new.tracknumber != 1
+		then raise exception 'Invalid track numbers';
+	end if;
+    select
+      count(SongCollectionSong.trackNumber), max(SongCollectionSong.trackNumber), min(SongCollectionSong.trackNumber)
+      into _count, _max, _min
+    from SongCollectionSong
+    where SongCollectionSong.idsongcollection = new.idsongcollection
+	  group by SongCollectionSong.idsongcollection;
+    if _min != 1 or _max != _count then
+      raise exception 'Invalid track numbers';
+    end if;
+    return new;
+  end;
+  $$
+  language 'plpgsql';
+create trigger checkContinuousTrackNumbersTrigger
+  after insert or update on SongCollectionSong
+  for each row execute procedure checkContinuousTrackNumbers();
 
 -- Episode
 --   SeasonNumber > 0
