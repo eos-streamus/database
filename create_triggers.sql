@@ -482,3 +482,17 @@ create trigger checkContinuousEpisodeNumbersInSeasonTrigger
 -- VideoPlaylist
 --   number > 0
 --   numbers follow eachother
+create or replace function checkPositiveVideoPlaylistVideoNumber()
+  returns trigger as 
+  $$
+  begin
+    if new.number < 1 then
+      raise exception 'VideoPlaylistVideo number must be positive';
+    end if;
+    return new;
+  end
+  $$
+  language 'plpgsql';
+create trigger checkPositiveVideoPlaylistVideoNumberTrigger
+  before insert or update on VideoPlaylistVideo
+  for each row execute procedure checkPositiveVideoPlaylistVideoNumber();
