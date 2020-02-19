@@ -200,3 +200,38 @@ create or replace function createVideoPlaylist(_name varchar(200), _idUser integ
   end;
   $$
   language 'plpgsql';
+
+create or replace function createSongPlaylist(_name varchar(200), _idUser integer)
+  returns integer as 
+  $$
+  declare
+    _idSongPlaylist integer;
+  begin
+    with
+    created_collection as (
+		  insert into collection(name) values (_name) returning id
+    ),
+    created_song_collection as (
+      insert into SongCollection(idcollection) values((select id from created_collection)) returning idCollection
+    )
+    insert into SongPlaylist(idSongCollection, idUser) values ((select idCollection from created_song_collection), _idUser) returning idSongCollection into _idSongPlaylist;
+    return _idSongPlaylist;
+  end;
+  $$
+  language 'plpgsql';
+
+create or replace function addSongToPlaylist(_idSong integer, _idSongPlaylist integer)
+  returns void as
+  $$
+  declare
+    _trackNumber smallint;
+  begin
+    if not exists(select 1 from songcollectionsong where idsongcollection = _idSongPlaylist) then
+      select 1 into _trackNumber;
+    else
+      select max(trackNumber) + 1 into _trackNumber from songcollectionsong where idsongcollection = _idSongPlaylist;
+    end if;
+    insert into SongCollectionSong(idSong, idSongCollection, trackNumber) values (_idSong, _idSongPlaylist, _trackNumber);
+  end;
+  $$
+  language 'plpgsql';
