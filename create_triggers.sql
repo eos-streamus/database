@@ -433,6 +433,19 @@ create trigger checkContinuousTrackNumbersTrigger
 -- Episode
 --   SeasonNumber > 0
 --   EpisodeNumber > 0
+create or replace function checkSeasonAndEpisodeNumber()
+  returns trigger as 
+  $$
+  begin
+    if new.seasonNumber < 1 then
+      raise exception 'Season number must be positive';
+    elseif new.episodeNumber < 1 then
+      raise exception 'Episode number must be positive';
+    end if;
+    return new;
+  end
+  $$
+  language 'plpgsql';
 --   EpisodeNumbers follow each other starting at 1
 
 -- VideoPlaylist
