@@ -433,7 +433,7 @@ create trigger checkContinuousTrackNumbersTrigger
 -- Episode
 --   SeasonNumber > 0
 --   EpisodeNumber > 0
-create or replace function checkSeasonAndEpisodeNumber()
+create or replace function checkPositiveSeasonAndEpisodeNumber()
   returns trigger as 
   $$
   begin
@@ -446,7 +446,38 @@ create or replace function checkSeasonAndEpisodeNumber()
   end
   $$
   language 'plpgsql';
+create trigger checkPositiveSeasonAndEpisodeNumberTrigger
+  before insert or update on Episode
+  for each row execute procedure checkPositiveSeasonAndEpisodeNumber();
+
 --   EpisodeNumbers follow each other starting at 1
+create or replace function checkContinuousEpisodeNumbersInSeason()
+  returns trigger as 
+  $$
+  declare
+    _max smallint;
+    _min smallint;
+    _count smallint;
+  begin
+  	if not exists(select 1 from episode where episode.idseries = new.idseries and episode.seasonnumber = new.seasonnumber) and new.episodenumber != 1
+		then raise exception 'Invalid episode numbers';
+	end if;
+    select
+      count(episode.episodenumber), max(episode.episodenumber), min(episode.episodenumber)
+      into _count, _max, _min
+    from episode
+    where episode.seasonnumber = new.seasonnumber and episode.idseries = new.idseries
+	  group by episode.seasonnumber, episode.idseries;
+    if _min != 1 or _max != _count then
+      raise exception 'Invalid episode numbers';
+    end if;
+    return new;
+  end;
+  $$
+  language 'plpgsql';
+create trigger checkContinuousEpisodeNumbersInSeasonTrigger
+  after insert or update on episode
+  for each row execute procedure checkContinuousEpisodeNumbersInSeason();
 
 -- VideoPlaylist
 --   number > 0
