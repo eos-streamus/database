@@ -496,3 +496,36 @@ create or replace function checkPositiveVideoPlaylistVideoNumber()
 create trigger checkPositiveVideoPlaylistVideoNumberTrigger
   before insert or update on VideoPlaylistVideo
   for each row execute procedure checkPositiveVideoPlaylistVideoNumber();
+
+drop trigger if exists checkContinuousVideoPlaylistVideoNumbersTrigger on VideoPlaylistVideo;
+create or replace function checkContinuousVideoPlaylistVideoNumbers()
+  returns trigger as 
+  $$
+  declare
+    _max smallint;
+    _min smallint;
+    _count smallint;
+  begin
+    if not exists (select 1 from VideoPlaylistVideo where VideoPlaylistVideo.idVideoPlaylist = new.idVideoPlaylist) and new.number != 1
+      then raise exception 'First video in playlist number should be 1';
+    end if;
+    select
+      count(*),
+      max(VideoPlaylistVideo.number),
+      min(VideoPlaylistVideo.number)
+    into
+      _count,
+      _max,
+      _min
+    from VideoPlaylistVideo
+    where VideoPlaylistVideo.idVideoPlaylist = new.idVideoPlaylist;
+    if _min != 1 or _max != _count then
+      raise exception 'Invalid VideoPlaylistVideo number';
+    end if;
+    return new;
+  end;
+  $$
+  language plpgsql;
+create trigger checkContinuousVideoPlaylistVideoNumbersTrigger
+  after insert or update on VideoPlaylistVideo
+  for each row execute procedure checkContinuousVideoPlaylistVideoNumbers();
