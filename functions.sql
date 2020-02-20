@@ -235,3 +235,26 @@ create or replace function addSongToPlaylist(_idSong integer, _idSongPlaylist in
   end;
   $$
   language 'plpgsql';
+
+create or replace function addVideoToPlaylist(_idVideo integer, _idVideoPlaylist integer)
+  returns table (idVideoPlaylist integer, idVideo integer, number smallint) as 
+  $$
+  declare
+    _number integer;
+  begin
+    if not exists(select 1 from VideoPlaylistVideo where VideoPlaylistVideo.idVideoPlaylist = _idVideoPlaylist) then
+      select 1 into _number;
+    else
+      select max(VideoPlaylistVideo.number) + 1 into _number from VideoPlaylistVideo where VideoPlaylistVideo.idVideoPlaylist = _idVideoPlaylist;
+    end if;
+    insert into VideoPlaylistVideo(idVideo, idVideoPlaylist, number) values (_idVideo, _idVideoPlaylist, _number);
+    return query
+      select
+        VideoPlaylistVideo.idVideoPlaylist,
+        VideoPlaylistVideo.idVideo,
+        VideoPlaylistVideo.number
+      from VideoPlaylistVideo
+      where VideoPlaylistVideo.idVideo = _idVideo and VideoPlaylistVideo.idVideoPlaylist = _idVideoPlaylist;
+  end;
+  $$
+  language 'plpgsql';
