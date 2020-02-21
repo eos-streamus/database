@@ -70,20 +70,33 @@ create or replace function createSong(_path varchar(1041), _name varchar(200), _
   language 'plpgsql';
 
 create or replace function createFilm(_path varchar(1041), _name varchar(200), _duration integer)
-  returns integer as
+  returns table (
+    id integer,
+    path varchar(1041),
+    name varchar(200),
+    createdAt timestamp,
+    duration integer
+  ) as 
   $$
   declare
     _idFilm integer;
   begin
     with
     created_resource as (
-      insert into Resource(path, name, duration) values (_path, _name, _duration) returning id
+      insert into Resource(path, name, duration) values (_path, _name, _duration) returning Resource.id
     ),
     created_video as (
-      insert into Video(idResource) values ((select id from created_resource)) returning idResource
+      insert into Video(idResource) values ((select created_resource.id from created_resource)) returning Video.idResource
     )
-    insert into Film(idVideo) values ((select idResource from created_video)) returning idVideo into _idFilm;
-    return _idFilm;
+    insert into Film(idVideo) values ((select created_video.idResource from created_video)) returning Film.idVideo into _idFilm;
+    return query
+      select
+        vfilm.id,
+        vfilm.path,
+        vfilm.name,
+        vfilm.createdAt,
+        vfilm.duration
+      from vfilm where vfilm.id = _idFilm;
   end
   $$
   language 'plpgsql';
