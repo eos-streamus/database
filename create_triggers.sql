@@ -529,3 +529,17 @@ create or replace function checkContinuousVideoPlaylistVideoNumbers()
 create trigger checkContinuousVideoPlaylistVideoNumbersTrigger
   after insert or update on VideoPlaylistVideo
   for each row execute procedure checkContinuousVideoPlaylistVideoNumbers();
+
+-- Delete resource when deleting song
+create or replace function deleteResourceOnDeleteSong()
+  returns trigger as
+  $$
+  begin
+    delete from resource where id = old.idresource;
+    return old;
+  end;
+  $$
+  language 'plpgsql';
+create trigger deleteResourceOnDeleteSongTrigger
+  after delete on song
+  for each row execute procedure deleteResourceOnDeleteSong();

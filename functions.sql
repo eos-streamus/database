@@ -42,17 +42,29 @@ create or replace function createAdmin(_firstname varchar(200), _lastname varcha
 
 
 
+drop function createSong(_path varchar(1041), _name varchar(200), _duration integer);
 create or replace function createSong(_path varchar(1041), _name varchar(200), _duration integer)
-  returns integer as
+  returns table (
+    id integer,
+    path varchar(1041),
+    name varchar(200),
+    createdAt timestamp,
+    duration integer
+  ) as 
   $$
   declare
     _idSong integer;
   begin
-    with created_resource as (
-      insert into Resource(path, name, duration) values (_path, _name, _duration) returning id
-    )
-    insert into Song(idResource) values ((select id from created_resource)) returning idResource into _idSong;
-    return _idSong;
+    insert into Resource(path, name, duration) values (_path, _name, _duration);
+    insert into Song(idResource) values ((select resource.id from resource where resource.path = _path));
+    return query
+      select
+        vsong.id,
+        vsong.path,
+        vsong.name,
+        vsong.createdAt,
+        vsong.duration
+      from vsong where vsong.path = _path;
   end
   $$
   language 'plpgsql';
