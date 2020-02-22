@@ -69,6 +69,7 @@ select
 	collection.id,
 	collection.name,
 	collection.createdat,
+  collection.updatedAt,
 	songcollectionsong.tracknumber,
 	vsong.id idsong,
 	vsong.name songname,
