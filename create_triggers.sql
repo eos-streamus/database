@@ -598,3 +598,29 @@ create or replace function deleteSongCollectionOnSongPlaylistDelete()
 create trigger deleteSongCollectionOnSongPlaylistDeleteTrigger
   after delete on SongPlaylist
   for each row execute procedure deleteSongCollectionOnSongPlaylistDelete();
+
+create or replace function deleteResourceOnDeleteVideo()
+  returns trigger as
+  $$
+  begin
+    delete from Resource where id = old.idResource;
+    return old;
+  end;
+  $$
+  language 'plpgsql';
+create trigger deleteResourceOnDeleteVideoTrigger
+  after delete on Video
+  for each row execute procedure deleteResourceOnDeleteVideo();
+
+create or replace function deleteVideoOnDeleteFilm()
+  returns trigger as 
+  $$
+  begin
+    delete from Video where idResource = old.idVideo;
+    return old;
+  end;
+  $$
+  language 'plpgsql';
+create trigger deleteVideoOnDeleteFilmTrigger
+  after delete on Film
+  for each row execute procedure deleteVideoOnDeleteFilm();
