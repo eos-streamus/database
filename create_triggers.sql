@@ -543,3 +543,17 @@ create or replace function deleteResourceOnDeleteSong()
 create trigger deleteResourceOnDeleteSongTrigger
   after delete on song
   for each row execute procedure deleteResourceOnDeleteSong();
+
+create or replace function updatePersonUpdatedAt()
+  returns trigger as 
+  $$
+  begin
+    new.updatedAt = now();
+    return new;
+  end;
+  $$
+  language 'plpgsql';
+
+create trigger updatePersonUpdatedAtTrigger
+  before update on Person
+  for each row execute procedure updatePersonUpdatedAt();
