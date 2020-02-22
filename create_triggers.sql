@@ -557,3 +557,17 @@ create or replace function updatePersonUpdatedAt()
 create trigger updatePersonUpdatedAtTrigger
   before update on Person
   for each row execute procedure updatePersonUpdatedAt();
+
+-- Delete Person where deleting User
+create or replace function deletePersonOnDeleteUser()
+  returns trigger as 
+  $$
+  begin
+    delete from Person where id = old.idPerson;
+    return old;
+  end;
+  $$
+  language 'plpgsql';
+create trigger deletePersonOnDeleteUserTrigger
+  after delete on StreamusUser
+  for each row execute procedure deletePersonOnDeleteUser();
