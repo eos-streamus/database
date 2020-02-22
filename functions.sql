@@ -264,20 +264,35 @@ create or replace function createVideoPlaylist(_name varchar(200), _idUser integ
   language 'plpgsql';
 
 create or replace function createSongPlaylist(_name varchar(200), _idUser integer)
-  returns integer as 
+  returns table (
+    id integer,
+    name varchar(200),
+    createdAt timestamp,
+    updatedAt timestamp,
+    userId integer
+  ) as 
   $$
   declare
     _idSongPlaylist integer;
   begin
     with
     created_collection as (
-		  insert into collection(name) values (_name) returning id
+		  insert into collection(name) values (_name) returning collection.id
     ),
     created_song_collection as (
-      insert into SongCollection(idcollection) values((select id from created_collection)) returning idCollection
+      insert into SongCollection(idcollection) values((select created_collection.id from created_collection)) returning Songcollection.idCollection
     )
-    insert into SongPlaylist(idSongCollection, idUser) values ((select idCollection from created_song_collection), _idUser) returning idSongCollection into _idSongPlaylist;
-    return _idSongPlaylist;
+    insert into SongPlaylist(idSongCollection, idUser) values ((select created_song_collection.idCollection from created_song_collection), _idUser) returning idSongCollection into _idSongPlaylist;
+    return query
+      select
+        collection.id,
+        collection.name,
+        collection.createdAt,
+        collection.updatedAt,
+        SongPlaylist.idUser
+      from SongPlaylist
+        inner join collection on songplaylist.idsongcollection = collection.id
+      where SongPlaylist.idSongCollection = _idSongPlaylist;
   end;
   $$
   language 'plpgsql';
