@@ -22,8 +22,17 @@ create or replace function createPerson(_firstname varchar(200), _lastname varch
   $$
   language 'plpgsql';
 
-create or replace function createUser(_firstname varchar(200), _lastname varchar(200), _dateOfBirth date, _email varchar(255), _username varchar(50), _password varchar(191))
-  returns integer as
+create or replace function createUser(_firstname varchar(200), _lastname varchar(200), _dateOfBirth date, _email varchar(255), _username varchar(50))
+  returns table (
+    id integer,
+    firstname varchar(200),
+    lastname varchar(200),
+    dateOfBirth date,
+    createdAt timestamp,
+    updatedAt timestamp,
+    email varchar(255),
+    username varchar(50)
+  ) as
   $$
   declare
   	_idPerson integer;
@@ -31,28 +40,44 @@ create or replace function createUser(_firstname varchar(200), _lastname varchar
     with created_person as (
       select * from createPerson(_firstname, _lastname, _dateOfBirth)
     )
-    insert into StreamusUser(idPerson, email, username, password) values ((select * from created_person), _email, _username, _password) returning idPerson into _idPerson;
-	  return _idPerson;
+    insert into StreamusUser(idPerson, email, username) values ((select created_person.id from created_person), _email, _username) returning idPerson into _idPerson;
+	  return query
+      select
+        *
+      from vuser
+      where vuser.id = _idPerson;
   end
   $$
   language 'plpgsql';
 
-create or replace function createAdmin(_firstname varchar(200), _lastname varchar(200), _dateOfBirth date, _email varchar(255), _username varchar(50), _password varchar(191))
+create or replace function upsertUserPassword(_idUser integer, _password varchar(191))
+  returns integer as
+  $$
+  begin
+    if exists (select 1 from UserPassword where idUser = _idUser) then
+      update UserPassword set password = _password where idUser = _idUser;
+    else
+      insert into UserPassword(idUser, password) values (_idUser, _password);
+    end if;
+    return _idUser;
+  end;
+  $$
+  language 'plpgsql';
+
+create or replace function createAdmin(_firstname varchar(200), _lastname varchar(200), _dateOfBirth date, _email varchar(255), _username varchar(50))
   returns integer as
   $$
   declare
     _idAdmin integer;
   begin
     with created_user as (
-      select * from createUser(_firstname, _lastname, _dateOfBirth, _email, _username, _password)
+      select * from createUser(_firstname, _lastname, _dateOfBirth, _email, _username)
     )
     insert into Admin(idUser) values ((select * from created_user)) returning idUser into _idAdmin;
     return _idAdmin;
   end
   $$
   language 'plpgsql';
-
-
 
 drop function createSong(_path varchar(1041), _name varchar(200), _duration integer);
 create or replace function createSong(_path varchar(1041), _name varchar(200), _duration integer)

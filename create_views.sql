@@ -6,6 +6,8 @@ select
   person.firstname,
   person.lastname,
   person.dateOfBirth,
+  person.createdAt,
+  person.updatedAt,
   streamususer.email,
   streamususer.username
 from streamususer
