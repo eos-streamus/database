@@ -30,8 +30,13 @@ create table StreamusUser(
 	idPerson integer primary key,
   email varchar(255) not null unique,
   username varchar(50) not null,
-  password varchar(191) not null,
   foreign key(idPerson) references Person(id) on delete cascade on update cascade
+);
+
+create table UserPassword(
+  idUser integer primary key,
+  password varchar(191) not null,
+  foreign key(idUser) references StreamusUser(idPerson) on delete cascade on update cascade
 );
 
 create table Admin(
