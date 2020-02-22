@@ -296,19 +296,21 @@ create or replace function createSongPlaylist(_name varchar(200), _idUser intege
   end;
   $$
   language 'plpgsql';
-
-create or replace function addSongToPlaylist(_idSong integer, _idSongPlaylist integer)
-  returns void as
+  
+drop function addSongToSongCollection(integer, integer);
+create or replace function addSongToSongCollection(_idSong integer, _idSongCollection integer)
+  returns integer as
   $$
   declare
     _trackNumber smallint;
   begin
-    if not exists(select 1 from songcollectionsong where idsongcollection = _idSongPlaylist) then
+    if not exists(select 1 from songcollectionsong where idsongcollection = _idSongCollection) then
       select 1 into _trackNumber;
     else
-      select max(trackNumber) + 1 into _trackNumber from songcollectionsong where idsongcollection = _idSongPlaylist;
+      select max(trackNumber) + 1 into _trackNumber from songcollectionsong where idsongcollection = _idSongCollection;
     end if;
-    insert into SongCollectionSong(idSong, idSongCollection, trackNumber) values (_idSong, _idSongPlaylist, _trackNumber);
+    insert into SongCollectionSong(idSong, idSongCollection, trackNumber) values (_idSong, _idSongCollection, _trackNumber);
+	return _trackNumber;
   end;
   $$
   language 'plpgsql';
