@@ -571,3 +571,30 @@ create or replace function deletePersonOnDeleteUser()
 create trigger deletePersonOnDeleteUserTrigger
   after delete on StreamusUser
   for each row execute procedure deletePersonOnDeleteUser();
+
+-- Delete Collection when deleting SongCollection
+create or replace function deleteCollectionOnSongCollectionDelete()
+  returns trigger as
+  $$
+  begin
+    delete from Collection where id = old.idCollection;
+    return old;
+  end;
+  $$
+  language 'plpgsql';
+create trigger deleteCollectionOnSongCollectionDeleteTrigger
+  after delete on SongCollection
+  for each row execute procedure deleteCollectionOnSongCollectionDelete();
+
+create or replace function deleteSongCollectionOnSongPlaylistDelete()
+  returns trigger as 
+  $$
+  begin
+    delete from SongCollection where idCollection = old.idSongCollection;
+    return old;
+  end;
+  $$
+  language 'plpgsql';
+create trigger deleteSongCollectionOnSongPlaylistDeleteTrigger
+  after delete on SongPlaylist
+  for each row execute procedure deleteSongCollectionOnSongPlaylistDelete();
