@@ -210,20 +210,33 @@ create or replace function createEpisode(_path varchar(1041), _name varchar(200)
   language 'plpgsql';
 
 create or replace function createSeries(_name varchar(200))
-  returns integer as
+  returns table(
+    id integer,
+    name varchar(200),
+    createdAt timestamp,
+    updatedAt timestamp
+  ) as
   $$
   declare
     _idSeries integer;
   begin
     with
     created_collection as (
-		  insert into collection(name) values (_name) returning id
+		  insert into collection(name) values (_name) returning collection.id
     ),
     created_video_collection as (
-      insert into videocollection(idcollection) values((select id from created_collection)) returning idCollection
+      insert into videocollection(idcollection) values((select created_collection.id from created_collection)) returning VideoCollection.idCollection
     )
-	insert into series(idvideocollection) values ((select idCollection from created_video_collection)) returning idVideoCollection into _idSeries;
-	return _idSeries;
+	insert into series(idvideocollection) values ((select created_video_collection.idCollection from created_video_collection)) returning series.idVideoCollection into _idSeries;
+	return query
+    select
+      collection.id,
+      collection.name,
+      collection.createdAt,
+      collection.updatedAt
+    from series
+      inner join collection on series.idVideoCollection = Collection.id
+    where series.idvideocollection = _idSeries;
   end;
   $$
   language 'plpgsql';
