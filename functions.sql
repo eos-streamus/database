@@ -1,11 +1,23 @@
+drop function createPerson(_firstname varchar(200), _lastname varchar(200), _dateOfBirth date);
 create or replace function createPerson(_firstname varchar(200), _lastname varchar(200), _dateOfBirth date)
-  returns integer as 
+  returns table (
+    id integer,
+    firstname varchar(200),
+    lastname varchar(200),
+    dateOfBirth date,
+    createdAt timestamp,
+    updatedAt timestamp
+  ) as 
   $$
   declare
   	_id integer;
   begin
-    insert into Person(firstname, lastname, dateOfBirth) values (_firstname, _lastname, _dateOfBirth) returning id into _id;
-	return _id;
+    insert into Person(firstname, lastname, dateOfBirth) values (_firstname, _lastname, _dateOfBirth) returning Person.id into _id;
+    return query
+      select
+        *
+      from Person
+      where Person.id = _id;
   end
   $$
   language 'plpgsql';
@@ -76,7 +88,7 @@ create or replace function createFilm(_path varchar(1041), _name varchar(200), _
     name varchar(200),
     createdAt timestamp,
     duration integer
-  ) as 
+  ) as    
   $$
   declare
     _idFilm integer;
