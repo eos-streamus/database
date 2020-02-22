@@ -21,7 +21,9 @@ create table Person(
 	id serial primary key,
   firstname varchar(200) not null,
   lastname varchar(200) not null,
-  dateOfBirth date
+  dateOfBirth date,
+  createdAt timestamp not null default now(),
+  updatedAt timestamp not null default now()
 );
 
 create table StreamusUser(
