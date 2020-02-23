@@ -108,6 +108,7 @@ select
 	collection.id,
 	collection.name,
 	collection.createdAt,
+  collection.updatedAt,
 	vepisode.id idepisode,
 	vepisode.seasonnumber,
 	vepisode.episodenumber,
