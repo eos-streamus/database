@@ -154,16 +154,28 @@ create or replace function createBand(_name varchar(191))
   language 'plpgsql';
 
 create or replace function createMusician(_name varchar(191), _idPerson integer default null)
-  returns integer as
+  returns table(
+    id integer,
+    name varchar(191),
+    idPerson integer
+  ) as
   $$
   declare
     _idArtist integer;
   begin
+    if _name is null and _idPerson is null then raise exception 'Musician name and idPerson cannot both be null';
     with created_artist as (
-      insert into Artist(name) values (_name) returning id
+      insert into Artist(name) values (_name) returning Artist.id
     )
-    insert into Musician(idArtist, idPerson) values ((select id from created_artist), _idPerson) returning idArtist into _idArtist;
-    return _idArtist;
+    insert into Musician(idArtist, idPerson) values ((select created_artist.id from created_artist), _idPerson) returning idArtist into _idArtist;
+    return query
+      select
+        artist.id,
+        artist.name,
+        musician.idPerson
+      from musician
+        inner join artist on musician.idArtist = artist.id
+      where musician.idArtist = _idArtist;
   end;
   $$
   language 'plpgsql';
@@ -190,21 +202,41 @@ create or replace function createAlbum(_name varchar(200), _releaseDate date, va
   $$
   language 'plpgsql';
 
+drop function createEpisode(_path varchar(1041), _name varchar(200), _duration integer, _idSeries integer, _seasonNumber smallint, _episodeNumber smallint);
 create or replace function createEpisode(_path varchar(1041), _name varchar(200), _duration integer, _idSeries integer, _seasonNumber smallint, _episodeNumber smallint)
-  returns integer as
+  returns table (
+    id integer,
+    path varchar(1041),
+    name varchar(200),
+    duration integer,
+    createdAt timestamp,
+    idSeries integer,
+    seasonNumber smallint,
+    episodeNumber smallint
+  ) as
   $$
   declare
     _idEpisode integer;
   begin
     with
     created_resource as (
-      insert into Resource(path, name, duration) values (_path, _name, _duration) returning id
+      insert into Resource(path, name, duration) values (_path, _name, _duration) returning Resource.id
     ),
     created_video as (
-      insert into Video(idResource) values ((select id from created_resource)) returning idResource
+      insert into Video(idResource) values ((select created_resource.id from created_resource)) returning idResource
     )
     insert into Episode(idVideo, idSeries, seasonNumber, episodeNumber) values ((select idResource from created_video), _idSeries, _seasonNumber, _episodeNumber) returning idVideo into _idEpisode;
-    return _idEpisode;
+    return query
+      select 
+        vepisode.id,
+        vepisode.path,
+        vepisode.name,
+        vepisode.duration,
+        vepisode.createdAt,
+        vepisode.idseries,
+        vepisode.seasonnumber,
+        vepisode.episodenumber
+      from vepisode where vepisode.id = _idEpisode;
   end;
   $$
   language 'plpgsql';
