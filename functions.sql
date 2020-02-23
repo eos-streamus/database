@@ -139,16 +139,25 @@ create or replace function createFilm(_path varchar(1041), _name varchar(200), _
   language 'plpgsql';
 
 create or replace function createBand(_name varchar(191))
-  returns integer as
+  returns table(
+    id integer,
+    name varchar(191)
+  ) as
   $$
   declare
     _idBand integer;
   begin
     with created_artist as (
-      insert into Artist(name) values (_name) returning id
+      insert into Artist(name) values (_name) returning Artist.id
     )
-    insert into Band(idArtist) values ((select id from created_artist)) returning idArtist into _idBand;
-    return _idBand;
+    insert into Band(idArtist) values ((select created_artist.id from created_artist)) returning idArtist into _idBand;
+    return query
+      select
+        artist.id,
+        artist.name
+      from Band
+        inner join artist on band.idartist = artist.id
+      where band.idartist = _idBand;
   end;
   $$
   language 'plpgsql';
