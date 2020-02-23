@@ -625,6 +625,32 @@ create trigger deleteVideoOnDeleteFilmTrigger
   after delete on Film
   for each row execute procedure deleteVideoOnDeleteFilm();
 
+create or replace function deleteCollectionOnDeleteVideoCollection()
+  returns trigger as
+  $$
+  begin
+    delete from collection where id = old.idcollection;
+    return old;
+  end;
+  $$
+  language 'plpgsql';
+create trigger deleteCollectionOnDeleteVideoCollectionTrigger
+  after delete on VideoCollection
+  for each row execute procedure deleteCollectionOnDeleteVideoCollection();
+
+create or replace function deleteVideoCollectionOnDeleteVideoPlaylist()
+  returns trigger as 
+  $$
+  begin
+    delete from videocollection where idcollection = old.idVideoCollection;
+    return old;
+  end;
+  $$
+  language 'plpgsql';
+create trigger deleteVideoCollectionOnDeleteVideoPlaylist
+  after delete on VideoPlaylist
+  for each row execute procedure deleteVideoCollectionOnDeleteVideoPlaylist();
+
 create or replace function deleteVideoCollectionOnDeleteSeries()
   returns trigger as
   $$
