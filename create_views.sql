@@ -191,3 +191,17 @@ create view vmusician as
     Musician.idPerson
   from Musician
     inner join Artist on Musician.idArtist = Artist.id;
+
+drop view if exists vband;
+create view vband as
+  select
+    artist.id,
+    artist.name,
+    vmusician.id idmusician,
+    vmusician.name musicianname,
+    bandmusician.memberfrom,
+    bandmusician.memberto
+  from band
+    inner join artist on band.idartist = artist.id
+    left join bandmusician on band.idartist = bandmusician.idband
+    left join vmusician on bandmusician.idmusician = vmusician.id;
