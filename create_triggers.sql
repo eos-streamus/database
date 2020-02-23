@@ -690,3 +690,29 @@ create or replace function deleteVideoOnDeleteEpisode()
 create trigger deleteVideoOnDeleteEpisodeTrigger
   after delete on Episode
   for each row execute procedure deleteVideoOnDeleteEpisode();
+
+create or replace function deleteArtistOnDeleteMusician()
+  returns trigger as
+  $$
+  begin
+    delete from artist where artist.id = old.idartist;
+    return old;
+  end;
+  $$
+  language 'plpgsql';
+create trigger deleteArtistOnDeleteMusicianTrigger
+  after delete on Musician
+  for each row execute procedure deleteArtistOnDeleteMusician();
+
+create or replace function deleteArtistOnDeleteBand()
+  returns trigger as
+  $$
+  begin
+    delete from artist where artist.id = old.idartist;
+    return old;
+  end;
+  $$
+  language 'plpgsql';
+create trigger deleteArtistOnDeleteBandTrigger
+  after delete on Band
+  for each row execute procedure deleteArtistOnDeleteBand();
