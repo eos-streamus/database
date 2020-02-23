@@ -599,6 +599,19 @@ create trigger deleteSongCollectionOnSongPlaylistDeleteTrigger
   after delete on SongPlaylist
   for each row execute procedure deleteSongCollectionOnSongPlaylistDelete();
 
+create or replace function deleteSongCollectionOnDeleteAlbum()
+  returns trigger as
+  $$
+  begin
+    delete from SongCollection where idCollection = old.idSongCollection;
+    return old;
+  end;
+  $$
+  language 'plpgsql';
+create trigger deleteSongCollectionOnDeleteAlbumTrigger
+  after delete on album
+  for each row execute procedure deleteSongCollectionOnDeleteAlbum();
+
 create or replace function deleteResourceOnDeleteVideo()
   returns trigger as
   $$
