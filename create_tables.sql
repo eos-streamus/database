@@ -133,7 +133,7 @@ create table Episode(
   seasonNumber smallint,
   episodeNumber smallint,
   foreign key(idVideo) references Video(idResource) on delete cascade on update cascade,
-  foreign key(idSeries) references Series(idVideoCollection) on delete set null,
+  foreign key(idSeries) references Series(idVideoCollection) on delete cascade,
   unique(idSeries, seasonNumber, episodeNumber)
 );
 
