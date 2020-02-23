@@ -182,3 +182,12 @@ create view vfullcollectionactivity as
     left join resourceactivity on collectionactivity.idactivity = resourceactivity.idcollectionactivity and
                                   vcollectionresource.idresource = resourceactivity.idresource;
 
+
+drop view if exists vmusician;
+create view vmusician as
+  select
+    Artist.id,
+    Artist.name,
+    Musician.idPerson
+  from Musician
+    inner join Artist on Musician.idArtist = Artist.id;
