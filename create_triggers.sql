@@ -215,7 +215,7 @@ create or replace function checkMultipleMusicianBandMembershipDateIntegrity()
             bandmusician.memberto >= new.memberfrom
           )
       ) then
-        raise exception 'Musician cannot overlapping memberships to band';
+        raise exception 'Musician cannot overlapping memberships to band' using ERRCODE = '40002';
     end if;
     return new;
   end;
