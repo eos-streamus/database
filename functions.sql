@@ -1,4 +1,4 @@
-drop function createPerson(_firstname varchar(200), _lastname varchar(200), _dateOfBirth date);
+drop function if exists  createPerson(_firstname varchar(200), _lastname varchar(200), _dateOfBirth date);
 create or replace function createPerson(_firstname varchar(200), _lastname varchar(200), _dateOfBirth date)
   returns table (
     id integer,
@@ -22,6 +22,7 @@ create or replace function createPerson(_firstname varchar(200), _lastname varch
   $$
   language 'plpgsql';
 
+drop function if exists  createUser(_firstname varchar(200), _lastname varchar(200), _dateOfBirth date, _email varchar(255), _username varchar(50));
 create or replace function createUser(_firstname varchar(200), _lastname varchar(200), _dateOfBirth date, _email varchar(255), _username varchar(50))
   returns table (
     id integer,
@@ -50,6 +51,7 @@ create or replace function createUser(_firstname varchar(200), _lastname varchar
   $$
   language 'plpgsql';
 
+drop function if exists  upsertUserPassword(_idUser integer, _password varchar(191));
 create or replace function upsertUserPassword(_idUser integer, _password varchar(191))
   returns integer as
   $$
@@ -64,6 +66,7 @@ create or replace function upsertUserPassword(_idUser integer, _password varchar
   $$
   language 'plpgsql';
 
+drop function if exists  createAdmin(_firstname varchar(200), _lastname varchar(200), _dateOfBirth date, _email varchar(255), _username varchar(50));
 create or replace function createAdmin(_firstname varchar(200), _lastname varchar(200), _dateOfBirth date, _email varchar(255), _username varchar(50))
   returns integer as
   $$
@@ -79,7 +82,7 @@ create or replace function createAdmin(_firstname varchar(200), _lastname varcha
   $$
   language 'plpgsql';
 
-drop function createSong(_path varchar(1041), _name varchar(200), _duration integer);
+drop function if exists  createSong(_path varchar(1041), _name varchar(200), _duration integer);
 create or replace function createSong(_path varchar(1041), _name varchar(200), _duration integer)
   returns table (
     id integer,
@@ -106,6 +109,7 @@ create or replace function createSong(_path varchar(1041), _name varchar(200), _
   $$
   language 'plpgsql';
 
+drop function if exists  createFilm(_path varchar(1041), _name varchar(200), _duration integer);
 create or replace function createFilm(_path varchar(1041), _name varchar(200), _duration integer)
   returns table (
     id integer,
@@ -138,6 +142,7 @@ create or replace function createFilm(_path varchar(1041), _name varchar(200), _
   $$
   language 'plpgsql';
 
+drop function if exists  createBand(_name varchar(191));
 create or replace function createBand(_name varchar(191))
   returns table(
     id integer,
@@ -162,6 +167,7 @@ create or replace function createBand(_name varchar(191))
   $$
   language 'plpgsql';
 
+drop function if exists  createMusician(_name varchar(191), _idPerson integer);
 create or replace function createMusician(_name varchar(191), _idPerson integer default null)
   returns table(
     id integer,
@@ -172,7 +178,7 @@ create or replace function createMusician(_name varchar(191), _idPerson integer 
   declare
     _idArtist integer;
   begin
-    if _name is null and _idPerson is null then raise exception 'Musician name and idPerson cannot both be null';
+    if _name is null and _idPerson is null then raise exception 'Musician name and idPerson cannot both be null'; end if;
     with created_artist as (
       insert into Artist(name) values (_name) returning Artist.id
     )
@@ -189,6 +195,7 @@ create or replace function createMusician(_name varchar(191), _idPerson integer 
   $$
   language 'plpgsql';
 
+drop function if exists  createAlbum(_name varchar(200), _releaseDate date, variadic _artistIds integer[]);
 create or replace function createAlbum(_name varchar(200), _releaseDate date, variadic _artistIds integer[] default null)
   returns integer as 
   $$
@@ -211,7 +218,7 @@ create or replace function createAlbum(_name varchar(200), _releaseDate date, va
   $$
   language 'plpgsql';
 
-drop function createEpisode(_path varchar(1041), _name varchar(200), _duration integer, _idSeries integer, _seasonNumber smallint, _episodeNumber smallint);
+drop function if exists  createEpisode(_path varchar(1041), _name varchar(200), _duration integer, _idSeries integer, _seasonNumber smallint, _episodeNumber smallint);
 create or replace function createEpisode(_path varchar(1041), _name varchar(200), _duration integer, _idSeries integer, _seasonNumber smallint, _episodeNumber smallint)
   returns table (
     id integer,
@@ -250,6 +257,7 @@ create or replace function createEpisode(_path varchar(1041), _name varchar(200)
   $$
   language 'plpgsql';
 
+drop function if exists  createSeries(_name varchar(200));
 create or replace function createSeries(_name varchar(200))
   returns table(
     id integer,
@@ -282,7 +290,8 @@ create or replace function createSeries(_name varchar(200))
   $$
   language 'plpgsql';
 
-create or replace function createCollectionActivity(_idCollection integer)
+drop function if exists  createCollectionActivity(_idCollection integer);
+drop function if exists  createVideoPlaylist(_name varchar(200), _idUser integer);create or replace function createCollectionActivity(_idCollection integer)
   returns bigint as
   $$
   declare
@@ -297,6 +306,7 @@ create or replace function createCollectionActivity(_idCollection integer)
   end
   $$
   language 'plpgsql';
+
 
 create or replace function createVideoPlaylist(_name varchar(200), _idUser integer)
   returns table(
@@ -332,6 +342,7 @@ create or replace function createVideoPlaylist(_name varchar(200), _idUser integ
   $$
   language 'plpgsql';
 
+drop function if exists  createSongPlaylist(_name varchar(200), _idUser integer);
 create or replace function createSongPlaylist(_name varchar(200), _idUser integer)
   returns table (
     id integer,
@@ -366,7 +377,7 @@ create or replace function createSongPlaylist(_name varchar(200), _idUser intege
   $$
   language 'plpgsql';
   
-drop function addSongToSongCollection(integer, integer);
+drop function if exists  addSongToSongCollection(_idSong integer, _idSongCollection integer);
 create or replace function addSongToSongCollection(_idSong integer, _idSongCollection integer)
   returns integer as
   $$
@@ -384,6 +395,7 @@ create or replace function addSongToSongCollection(_idSong integer, _idSongColle
   $$
   language 'plpgsql';
 
+drop function if exists  addVideoToPlaylist(_idVideo integer, _idVideoPlaylist integer);
 create or replace function addVideoToPlaylist(_idVideo integer, _idVideoPlaylist integer)
   returns table (idVideoPlaylist integer, idVideo integer, number smallint) as 
   $$
