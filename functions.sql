@@ -68,7 +68,16 @@ create or replace function upsertUserPassword(_idUser integer, _password varchar
 
 drop function if exists  createAdmin(_firstname varchar(200), _lastname varchar(200), _dateOfBirth date, _email varchar(255), _username varchar(50));
 create or replace function createAdmin(_firstname varchar(200), _lastname varchar(200), _dateOfBirth date, _email varchar(255), _username varchar(50))
-  returns integer as
+  returns table (
+    id integer,
+    firstname varchar(200),
+    lastname varchar(200),
+    dateOfBirth date,
+    createdAt timestamp,
+    updatedAt timestamp,
+    email varchar(255),
+    username varchar(50)
+  ) as
   $$
   declare
     _idAdmin integer;
@@ -76,8 +85,12 @@ create or replace function createAdmin(_firstname varchar(200), _lastname varcha
     with created_user as (
       select * from createUser(_firstname, _lastname, _dateOfBirth, _email, _username)
     )
-    insert into Admin(idUser) values ((select * from created_user)) returning idUser into _idAdmin;
-    return _idAdmin;
+    insert into Admin(idUser) values ((select created_user.id from created_user)) returning idUser into _idAdmin;
+    return query
+      select
+        *
+      from vuser
+      where vuser.id = _idAdmin;
   end
   $$
   language 'plpgsql';
@@ -290,24 +303,7 @@ create or replace function createSeries(_name varchar(200))
   $$
   language 'plpgsql';
 
-drop function if exists  createCollectionActivity(_idCollection integer);
-drop function if exists  createVideoPlaylist(_name varchar(200), _idUser integer);create or replace function createCollectionActivity(_idCollection integer)
-  returns bigint as
-  $$
-  declare
-    _idCollectionActivity bigint;
-  begin
-    with
-    created_activity as (
-      insert into Activity values(default) returning id
-    )
-    insert into CollectionActivity(idActivity, idCollection) values ((select id from created_activity), _idCollection) returning idActivity into _idCollectionActivity;
-    return _idCollectionActivity;
-  end
-  $$
-  language 'plpgsql';
-
-
+drop function if exists  createVideoPlaylist(_name varchar(200), _idUser integer);
 create or replace function createVideoPlaylist(_name varchar(200), _idUser integer)
   returns table(
     id integer,
@@ -418,3 +414,75 @@ create or replace function addVideoToPlaylist(_idVideo integer, _idVideoPlaylist
   end;
   $$
   language 'plpgsql';
+
+  drop function if exists createResourceActivity(_idResource integer, _idUser integer);
+  create or replace function createResourceActivity(_idResource integer, _idUser integer)
+    returns table (
+      id bigint,
+      idResource integer,
+      idUser integer,
+      manages boolean
+    ) as
+    $$
+    declare
+      _idActivity integer;
+    begin
+      with
+      created_activity as (
+        insert into activity values(default) returning activity.id
+      ),
+
+      created_resource_activity as (
+        insert into resourceactivity(idActivity, idresource) values ((select created_activity.id from created_activity), _idResource) returning resourceactivity.idactivity
+      )
+      insert into useractivity(idActivity, idUser, manages) values ((select idactivity from created_resource_activity), _idUser, true) returning useractivity.idactivity into _idActivity;
+      return query
+        select
+          activity.id,
+          ResourceActivity.idResource,
+          UserActivity.idUser,
+          UserActivity.manages
+        from Activity
+          inner join ResourceActivity on Activity.id = ResourceActivity.idActivity
+          inner join UserActivity on ResourceActivity.idActivity = UserActivity.idActivity
+        where
+          activity.id = _idActivity;
+    end;
+    $$
+    language 'plpgsql';
+
+  drop function if exists createCollectionActivity(_idCollection integer, _idUser integer);
+  create or replace function createCollectionActivity(_idCollection integer, _idUser integer)
+    returns table (
+      id bigint,
+      idCollection integer,
+      idUser integer,
+      manages boolean
+    ) as
+    $$
+    declare
+      _idActivity integer;
+    begin
+      with
+      created_activity as (
+        insert into activity values(default) returning activity.id
+      ),
+
+      created_Collection_activity as (
+        insert into Collectionactivity(idActivity, idCollection) values ((select created_activity.id from created_activity), _idCollection) returning Collectionactivity.idactivity
+      )
+      insert into useractivity(idActivity, idUser, manages) values ((select idactivity from created_Collection_activity), _idUser, true) returning useractivity.idactivity into _idActivity;
+      return query
+        select
+          activity.id,
+          CollectionActivity.idCollection,
+          UserActivity.idUser,
+          UserActivity.manages
+        from Activity
+          inner join CollectionActivity on Activity.id = CollectionActivity.idActivity
+          inner join UserActivity on CollectionActivity.idActivity = UserActivity.idActivity
+        where
+          activity.id = _idActivity;
+    end;
+    $$
+    language 'plpgsql'; 
