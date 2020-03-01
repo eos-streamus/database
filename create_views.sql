@@ -173,14 +173,23 @@ drop view if exists vfullcollectionactivity;
 create view vfullcollectionactivity as
   select
     collectionactivity.idactivity idcollectionactivity,
-    vcollectionresource.*,
+    collectionactivity.idcollection,
+    collection.name,
+    vcollectionresource.idresource,
+    resource.name resourcename,
+    vcollectionresource.num,
     resourceactivity.idactivity idresourceactivity,
     resourceactivity.startedat,
     resourceactivity.pausedat
   from collectionactivity
+    inner join collection on collectionactivity.idcollection = collection.id
     inner join vcollectionresource on collectionactivity.idcollection = vcollectionresource.idcollection
+    inner join resource on vcollectionresource.idresource = resource.id
     left join resourceactivity on collectionactivity.idactivity = resourceactivity.idcollectionactivity and
-                                  vcollectionresource.idresource = resourceactivity.idresource;
+                                  vcollectionresource.idresource = resourceactivity.idresource
+  order by
+    idcollectionactivity,
+    num;
 
 
 drop view if exists vmusician;
@@ -205,3 +214,10 @@ create view vband as
     inner join artist on band.idartist = artist.id
     left join bandmusician on band.idartist = bandmusician.idband
     left join vmusician on bandmusician.idmusician = vmusician.id;
+
+drop view if exists vadmin;
+create view vadmin as
+  select
+    vuser.*
+  from admin
+    inner join vuser on admin.iduser = vuser.id;
