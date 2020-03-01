@@ -212,7 +212,7 @@ create table ResourceActivity(
 	idActivity bigint primary key,
   idResource integer not null,
   idCollectionActivity bigint,
-  startedAt timestamp not null default now(),
+  startedAt timestamp default null,
   pausedAt integer,
 	foreign key(idActivity) references Activity(id) on delete cascade on update cascade,
   foreign key(idResource) references Resource(id) on delete cascade on update cascade
