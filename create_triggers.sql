@@ -716,3 +716,29 @@ create or replace function deleteArtistOnDeleteBand()
 create trigger deleteArtistOnDeleteBandTrigger
   after delete on Band
   for each row execute procedure deleteArtistOnDeleteBand();
+
+create or replace function deleteActivityOnDeleteCollectionActivity()
+  returns trigger as 
+  $$
+  begin
+    delete from Activity where Activity.id = old.id;
+    return old;
+  end;
+  $$
+  language 'plpgsql';
+create trigger deleteActivityOnDeleteCollectionActivityTrigger
+  after delete on CollectionActivity
+  for each row execute procedure deleteActivityOnDeleteCollectionActivity();
+
+create or replace function deleteActivityOnDeleteResourceActivity()
+  returns trigger as 
+  $$
+  begin
+    delete from Activity where Activity.id = old.id;
+    return old;
+  end;
+  $$
+  language 'plpgsql';
+create trigger deleteActivityOnDeleteResourceActivityTrigger
+  after delete on ResourceActivity
+  for each row execute procedure deleteActivityOnDeleteResourceActivity();

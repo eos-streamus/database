@@ -416,10 +416,11 @@ create or replace function addVideoToPlaylist(_idVideo integer, _idVideoPlaylist
   language 'plpgsql';
 
   drop function if exists createResourceActivity(_idResource integer, _idUser integer);
-  create or replace function createResourceActivity(_idResource integer, _idUser integer)
+  create or replace function createResourceActivity(_idResource integer, _idUser integer default null, _idCollectionActivity bigint default null)
     returns table (
       id bigint,
       idResource integer,
+      idCollectionActivity bigint,
       idUser integer,
       manages boolean
     ) as
@@ -433,18 +434,22 @@ create or replace function addVideoToPlaylist(_idVideo integer, _idVideoPlaylist
       ),
 
       created_resource_activity as (
-        insert into resourceactivity(idActivity, idresource) values ((select created_activity.id from created_activity), _idResource) returning resourceactivity.idactivity
+        insert into resourceactivity(idActivity, idresource, idCollectionActivity) values ((select created_activity.id from created_activity), _idResource, _idCollectionActivity) returning resourceactivity.idactivity
       )
-      insert into useractivity(idActivity, idUser, manages) values ((select idactivity from created_resource_activity), _idUser, true) returning useractivity.idactivity into _idActivity;
+      select into _idActivity created_resource_activity.idActivity from created_resource_activity;
+      if _idUser is not null then
+        insert into useractivity(idActivity, idUser, manages) values (_idActivity, _idUser, true);
+      end if;
       return query
         select
           activity.id,
           ResourceActivity.idResource,
+          ResourceActivity.idCollectionActivity,
           UserActivity.idUser,
           UserActivity.manages
         from Activity
           inner join ResourceActivity on Activity.id = ResourceActivity.idActivity
-          inner join UserActivity on ResourceActivity.idActivity = UserActivity.idActivity
+          left join UserActivity on ResourceActivity.idActivity = UserActivity.idActivity
         where
           activity.id = _idActivity;
     end;

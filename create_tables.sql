@@ -208,16 +208,6 @@ create table Activity(
 	id bigserial primary key
 );
 
-create table ResourceActivity(
-	idActivity bigint primary key,
-  idResource integer not null,
-  idCollectionActivity bigint,
-  startedAt timestamp default null,
-  pausedAt integer,
-	foreign key(idActivity) references Activity(id) on delete cascade on update cascade,
-  foreign key(idResource) references Resource(id) on delete cascade on update cascade
-);
-
 create table CollectionActivity(
 	idActivity bigint primary key,
   idCollection integer not null,
@@ -225,11 +215,14 @@ create table CollectionActivity(
   foreign key(idCollection) references Collection(id) on delete cascade on update cascade
 );
 
-create table CollectionActivityResourceActivity(
-	idCollectionActivity bigint,
-  idResourceActivity bigint,
-	primary key(idCollectionActivity, idResourceActivity),
-  foreign key(idResourceActivity) references ResourceActivity(idActivity) on delete cascade on update cascade,
+create table ResourceActivity(
+	idActivity bigint primary key,
+  idResource integer not null,
+  idCollectionActivity bigint,
+  startedAt timestamp default null,
+  pausedAt integer,
+	foreign key(idActivity) references Activity(id) on delete cascade on update cascade,
+  foreign key(idResource) references Resource(id) on delete cascade on update cascade,
   foreign key(idCollectionActivity) references CollectionActivity(idActivity) on delete cascade on update cascade
 );
 
