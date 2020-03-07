@@ -721,7 +721,7 @@ create or replace function deleteActivityOnDeleteCollectionActivity()
   returns trigger as 
   $$
   begin
-    delete from Activity where Activity.id = old.id;
+    delete from Activity where Activity.id = old.idActivity;
     return old;
   end;
   $$
@@ -734,7 +734,7 @@ create or replace function deleteActivityOnDeleteResourceActivity()
   returns trigger as 
   $$
   begin
-    delete from Activity where Activity.id = old.id;
+    delete from Activity where Activity.id = old.idActivity;
     return old;
   end;
   $$
