@@ -210,23 +210,38 @@ create or replace function createMusician(_name varchar(191), _idPerson integer 
 
 drop function if exists  createAlbum(_name varchar(200), _releaseDate date, variadic _artistIds integer[]);
 create or replace function createAlbum(_name varchar(200), _releaseDate date, variadic _artistIds integer[] default null)
-  returns integer as 
+  returns table(
+    id integer,
+    name varchar(200),
+    createdAt timestamp,
+    updatedAt timestamp,
+    releaseDate date
+  ) as 
   $$
   declare
     _idAlbum integer;
   begin
   	with created_collection as (
-		insert into collection(name) values (_name) returning id
+		insert into collection(name) values (_name) returning collection.id
 	),
 	created_song_collection as (
-		insert into songcollection(idCollection) values ((select id from created_collection)) returning idCollection
+		insert into songcollection(idCollection) values ((select created_collection.id from created_collection)) returning SongCollection.idCollection
 	)
-  	insert into album(idSongCollection, releaseDate) values ((select idCollection from created_song_collection), _releaseDate) returning idSongCollection into _idAlbum;
+  insert into album(idSongCollection, releaseDate) values ((select idCollection from created_song_collection), _releaseDate) returning idSongCollection into _idAlbum;
+  if _artistIds is not null then
     for i in array_lower(_artistIds, 1) .. array_upper(_artistIds, 1)
     loop
-		insert into albumartist(idAlbum, idArtist) values (_idAlbum, _artistIds[i]);
+    insert into albumartist(idAlbum, idArtist) values (_idAlbum, _artistIds[i]);
     end loop;
-	return _idAlbum;
+  end if;
+	return query
+    select
+      collection.*,
+      album.releaseDate
+    from album
+      inner join songcollection on album.idsongcollection = songcollection.idcollection
+      inner join collection on songcollection.idcollection = collection.id
+    where album.idsongcollection = _idAlbum;
   end;
   $$
   language 'plpgsql';
