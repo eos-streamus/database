@@ -73,7 +73,7 @@ create or replace function checkActivityMessageTarget()
   returns trigger as
   $$
   begin
-    if (select idCollection from ResourceActivity where ActivityMessage.idActivity = ResourceActivity.idActivity) is not null then
+    if (select idCollectionActivity from ResourceActivity where ResourceActivity.idActivity = new.idActivity) is not null then
       raise exception 'ActivityMessage cannot have as target a ResourceActivity which is part of a CollectionActivity';
     end if;
     return new;
