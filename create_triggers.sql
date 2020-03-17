@@ -742,3 +742,16 @@ create or replace function deleteActivityOnDeleteResourceActivity()
 create trigger deleteActivityOnDeleteResourceActivityTrigger
   after delete on ResourceActivity
   for each row execute procedure deleteActivityOnDeleteResourceActivity();
+
+create or replace function deleteUserOnDeleteAdmin()
+  returns trigger as 
+  $$
+  	begin
+    delete from streamususer where streamusUser.idPerson = old.idUser;
+    return old;
+	end;
+  $$
+  language 'plpgsql';
+create trigger deleteUserOnDeleteAdminTrigger
+  after delete on admin
+  for each row execute procedure deleteUserOnDeleteAdmin();
