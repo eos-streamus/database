@@ -198,24 +198,37 @@ create or replace function checkMultipleMusicianBandMembershipDateIntegrity()
   begin
     if
       exists (
-        select 1 
-        from bandmusician 
+        /**
+         * Case 1 : other.to is null
+         *   Refuse if
+         *	 	 - new.to is null
+         *     - new.to >= other.from
+         * Case 2 : other.to is not null
+         *   Refuse if
+         *     - new.to is null and new.from < other.to
+         *     - new.to is not null and
+         *       - new.to < other.to and new.to > other.from OR
+         *       - new.from > other.from and new.from < other.to
+        */
+        select
+          1
+        from bandmusician as other
         where
-          bandmusician.idband = new.idband and 
-          bandmusician.idmusician = new.idmusician and 
-          bandmusician.memberfrom != new.memberfrom
-      ) and exists (
-        select 1
-        from bandmusician
-        where
-          bandmusician.idband = new.idband and 
-          bandmusician.idmusician = new.idmusician and 
-          bandmusician.memberfrom != new.memberfrom and (
-            bandmusician.memberto is null or
-            bandmusician.memberto >= new.memberfrom
+          other.id != new.id and
+          other.idmusician = new.idmusician and
+          other.idband = new.idband and (
+            other.memberto is null and (new.memberto is null or new.memberto >= other.memberfrom)
+            or
+            other.memberto is not null and (
+              new.memberto is null and new.memberfrom < other.memberto or
+              new.memberto is not null and (
+                new.memberto between other.memberfrom and other.memberto or
+                new.memberfrom between other.memberfrom and other.memberto
+              )
+            )
           )
       ) then
-        raise exception 'Musician cannot overlapping memberships to band' using ERRCODE = '40002';
+        raise exception 'Musician cannot have overlapping memberships to band' using ERRCODE = '40002';
     end if;
     return new;
   end;
@@ -232,7 +245,7 @@ create trigger checkMultipleMusicianBandMembershipDateIntegrityUpdateTrigger
 -- Resource
 --   Resource.created_at <= now()
 create or replace function checkResourceCreatedAtValidity()
-  returns trigger as 
+  returns trigger as
   $$
   begin
     if new.createdAt > now() then
