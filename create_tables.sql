@@ -177,6 +177,7 @@ create table Band(
 );
 
 create table BandMusician(
+  id serial,
 	idMusician integer,
   idBand integer,
 	memberFrom date not null,
