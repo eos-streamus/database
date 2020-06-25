@@ -505,4 +505,32 @@ create or replace function addVideoToPlaylist(_idVideo integer, _idVideoPlaylist
           activity.id = _idActivity;
     end;
     $$
-    language 'plpgsql'; 
+    language 'plpgsql';
+
+  drop function if exists swapTrackNumbers(_idSongCollection integer, _idSong1 integer, _idSong2 integer);
+  create function swapTrackNumbers(_idSongCollection integer, _idSong1 integer, _idSong2 integer)
+    returns void as
+    $$
+      declare
+        _trackNumber1 smallint;
+        _trackNumber2 smallint;
+      begin
+        select
+          tracknumber
+        from SongCollectionSong
+        where
+          SongCollectionSong.idSongCollection = _idSongCollection and
+          SongCollectionSong.idSong = _idSong1 into _trackNumber1;
+        select
+          tracknumber
+        from SongCollectionSong
+        where
+          SongCollectionSong.idSongCollection = _idSongCollection and
+          SongCollectionSong.idSong = _idSong2 into _trackNumber1;
+        update SongCollectionSong set trackNumber = _trackNumber2 where idSongCollection = _idSongCollection and idSong = _idSong1;
+        update SongCollectionSong set trackNumber = _trackNumber1 where idSongCollection = _idSongCollection and idSong = _idSong2;
+        return;
+      end;
+
+    $$
+    language 'plpgsql';
