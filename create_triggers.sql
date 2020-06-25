@@ -416,7 +416,7 @@ create trigger checkPositiveTrackNumber
 
 --   track_numbers are continuous integers.
 create or replace function checkContinuousTrackNumbers()
-  returns trigger as 
+  returns trigger as
   $$
   declare
     _max smallint;
@@ -432,7 +432,7 @@ create or replace function checkContinuousTrackNumbers()
     from SongCollectionSong
     where SongCollectionSong.idsongcollection = new.idsongcollection
 	  group by SongCollectionSong.idsongcollection;
-    if _min != 1 or _max != _count then
+    if _min != 1 or _max > _count then
       raise exception 'Invalid track numbers';
     end if;
     return new;
@@ -768,3 +768,19 @@ create or replace function deleteUserOnDeleteAdmin()
 create trigger deleteUserOnDeleteAdminTrigger
   after delete on admin
   for each row execute procedure deleteUserOnDeleteAdmin();
+
+create or replace function verifyUserBirthDate()
+  returns trigger as
+  $$
+    begin
+    if new.dateofbirth > CURRENT_DATE then
+      raise exception 'Invalid birth date';
+    end if;
+    return new;
+    end
+  $$
+  language 'plpgsql';
+create trigger verifyUserBirthDateTrigger
+  after insert or update on Person
+  for each row
+    execute procedure verifyUserBirthDate();
