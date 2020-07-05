@@ -141,11 +141,11 @@ create trigger checkPausedAtValidityOnInsertTrigger
 drop trigger if exists checkBandMusicianFromToIntegrityInsertTrigger on bandmusician;
 drop trigger if exists checkBandMusicianFromToIntegrityUpdateTrigger on bandmusician;
 create or replace function checkBandMusicianFromToIntegrity()
-  returns trigger as 
+  returns trigger as
   $$
   begin
     if new.memberTo is not null and new.memberfrom >= new.memberto then
-      raise exception 'From must be <= to';
+      raise exception 'From must be <= to' using ERRCODE = '40002';
     elseif new.memberto is not null and new.memberto > now() then
       raise exception 'To % cannot be in the future', new.to;
     end if;
